@@ -6,27 +6,7 @@ The AI Event Processor is a multi-agent Event-Driven Agentic Workflow designed t
 
 The application is built as a Go web server that orchestrates a team of specialized AI agents:
 
-### Agents
-
-1.  **Discovery Agent ("The Commodore")**:
-    *   **Role**: Global Seasonal Discovery Expert.
-    *   **Goal**: Identifies regions in their prime sailing season based on the time of year.
-    *   **Capabilities**: Suggests destinations (Standard, Hidden Gems, Regional Favorites, Challenging) with sailing suitability scores.
-
-2.  **Voyage Agent ("The Guide")**:
-    *   **Role**: Local Knowledge Expert and Sailing Guide.
-    *   **Goal**: Provides specific routing and local advice.
-    *   **Tools**: Google Search.
-
-3.  **Researcher Agent ("The Harbourmaster")**:
-    *   **Role**: Virtual Harbourmaster.
-    *   **Goal**: Researches specific stops, anchorages, and marinas.
-    *   **Tools**:
-        *   **Weather**: Forecasts and marine conditions.
-        *   **Tides**: Tide predictions.
-        *   **Sunrise/Sunset**: Daylight hours.
-        *   **Places**: Finds marinas, restaurants, and facilities using Google Maps.
-        *   **Search Specialist**: A sub-agent for finding web information (reviews, facilities).
+TBA (a visual representation of how the agents are structured)
 
 ### Technical Stack
 
@@ -40,75 +20,67 @@ The application is built as a Go web server that orchestrates a team of speciali
 
 *   Go 1.23 or higher.
 *   A Google Cloud Project.
-*   API Keys for:
-    *   Google Gemini API.
+*   API Keys for Google Gemini API or Google Vertex
 
-## Steps to use Google Vertex
+## Google Vertex
 
-The reason we want to use Google Vertex as opposed to gemini API Keu is: 
+The reason we want to use Google Vertex as opposed to Gemini API Key is because of the tool argument handling. The issue is with how you're using `functiontool.New()`. This is a known compatibility issue between the ADK's automatic schema generation and certain Gemini AP variants.
 
-The issue is with how you're using functiontool.New(). This is a known compatibility issue between the ADK's automatic schema generation and certain Gemini AP variants.
+The `functiontool.New()` helper uses reflection to automatically generate a genai.Schema from your Go structs (`WeatherArgs` and `WeatherResult`). Depending on how it generates the schema,
+it might be using ParametersJsonSchema or other fields that aren't supported by Gemini API (even though they work on Vertex AI).
 
-### The Problem
-
-The functiontool.New() helper uses reflection to automatically generate a genai.Schema from
-your Go structs (WeatherArgs and WeatherResult). Depending on how it generates the schema,
-it might be using ParametersJsonSchema or other fields that aren't supported by Gemini API
-(even though they work on Vertex AI).
-
-From the code at tool/functiontool/functiontool.go, the automatic schema generation can
-create schemas that are incompatible with Gemini API's function calling.
+From the ADK code at `tool/functiontool/functiontool.go`, the automatic schema generation can create schemas that are incompatible with Gemini API's function calling.
 
 
 **Step 1**: Install Google Cloud CLI
 
-  If you don't have it already:
+If you don't have it already:
 
-  ### macOS
 ```bash
   brew install google-cloud-sdk
 ```
 
-  ### Or download from https://cloud.google.com/sdk/docs/install
+Or download from https://cloud.google.com/sdk/docs/install
 
 **Step 2**: Authenticate with Google Cloud
 
-  ### This opens a browser for you to log in with your Google account
+This opens a browser for you to log in with your Google account
+
 ```bash
   gcloud auth application-default login
 ```
 
-  This creates credentials at ~/.config/gcloud/application_default_credentials.json that the
-  ADK will automatically use.
+This creates credentials at ~/.config/gcloud/application_default_credentials.json that the
+ADK will automatically use.
 
 **Step 3**: Set Your Google Cloud Project
 
-  ### Replace with your actual GCP project ID
+Replace with your actual GCP project ID
 ```bash
   gcloud config set project YOUR_PROJECT_ID
 ```
 
-  ### Or set it as an environment variable
+Or set it as an environment variable
 ```bash
   export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
 ```
 
 **Step 4**: Enable Vertex AI API
 
-  ### Enable the Vertex AI API for your project
+Enable the Vertex AI API for your project
 ```bash
   gcloud services enable aiplatform.googleapis.com
 ```
 
 **Step 5**: Set the Environment Variable
 
-  ### In your terminal or add to ~/.zshrc or ~/.bashrc
+In your terminal or add to ~/.zshrc or ~/.bashrc
 ```bash
   export GOOGLE_GENAI_USE_VERTEXAI=1
   export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
 ```
 
-  ### Or in your .env file (make sure your app loads it)
+Or in your .env file (make sure your app loads it)
 ```bash
   GOOGLE_GENAI_USE_VERTEXAI=1
   GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
@@ -116,7 +88,7 @@ create schemas that are incompatible with Gemini API's function calling.
 
 **Step 6**: Remove GOOGLE_API_KEY
 
-  When using Vertex AI, you don't use GOOGLE_API_KEY:
+When using Vertex AI, you don't use GOOGLE_API_KEY:
 
 ```bash
   ### In your .env file:
@@ -141,14 +113,14 @@ create schemas that are incompatible with Gemini API's function calling.
 
     ```env
     GEMINI_API_KEY=your-gemini-api-key
+    GOOGLE_GENAI_USE_VERTEXAI=1
+    GOOGLE_CLOUD_PROJECT=<id>
     ENV=development
     PORT=8081
     MODEL=gemini-2.5-flash
     ```
 
-## Usage
-
-### Running the Server
+## Running the Server
 
 Start the agent server:
 
@@ -165,18 +137,16 @@ go build -o server .
 
 The server listens on port `8081` (default).
 
-### Interactive Testing
+## Interactive Testing
 
-Start the test script:
+Start the test script to send multiple events to the AI layer over its API Endpoint:
 
 ```bash
 cd scripts
 go run test-events.go
 ```
 
-## Testing
-
-### Unit Tests
+## Unit Testing
 
 Run the Go unit tests for all packages:
 
@@ -184,50 +154,3 @@ Run the Go unit tests for all packages:
 go test ./...
 ```
 
-### Integration Testing
-
-The `scripts/*.sh` files act as manual integration tests, ensuring the full HTTP flow, session management, and agent execution work as expected against a running server.
-
-## Data Structures
-
-The agents are designed to produce structured JSON outputs. Below are the primary data models used across the system:
-
-### 1. Discovery Data (Sailing Regions)
-The **Commodore** identifies prime sailing areas for a given month.
-- **Fields**:
-  - `name`: Region name (e.g., "Whitsunday Islands").
-  - `tier`: Classification (Standard, Hidden Gem, Regional Favorite, Challenging).
-  - `suitability_score`: 0-100 rating for sailing conditions.
-  - `avg_wind_speed_knots` / `avg_temp_c`: Seasonal averages.
-  - `geometry`: A GeoJSON Polygon outlining the area.
-  - `summary`: Pitch for the destination.
-
-### 2. Voyage Data (Regional Guide)
-The **Guide Agent** provides a high-level briefing for a general area or country.
-- **Fields**:
-  - `sailing_season`: Primary months, storm risks, and peak periods.
-  - `hazards`: Navigation risks like reefs or strong currents.
-  - `hubs`: Key marinas and sailing centers.
-  - `logistics`: Nearby airports, currency, languages, and emergency numbers.
-  - `points_of_interest`: Top nautical sites and landmarks.
-
-### 3. Stop Data (Destination Briefing)
-The **Harbourmaster** generates a detailed report for a specific coordinate and date.
-- **Fields**:
-  - `weather_summary`: Synthesized forecast including wind, waves, and temperature.
-  - `sun_phase`: Sunrise and sunset times for the specific location.
-  - `tides`: Detailed tide events (High/Low) from the nearest station.
-  - `facilities`: Structured list of Anchorages, Marinas, Moorings, and waterfront amenities.
-  - `details`: Specifics like protection level, VHF channels, and websites.
-
-## Project Structure
-
-*   `main.go`: Entry point. Sets up the server, middleware, and wires dependencies.
-*   `agent_setup.go`: Configures and constructs the ADK agents (prompts, tools, models).
-*   `middleware.go`: HTTP middleware for logging and tracing.
-*   `tool_monitor.go`: Telemetry helper for tracking tool execution duration.
-*   `tools/`: Implementations of Weather, Tide, Places, and Sunrise tools.
-*   `config/`: Configuration loading and validation.
-*   `logging/`: Structured logging setup and handlers.
-*   `prompts/`: Markdown files containing system instructions for the AI agents.
-*   `test_scripts/`: Curl-based scripts for testing the API.
