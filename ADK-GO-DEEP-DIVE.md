@@ -5151,3 +5151,782 @@ This bridges ADK's tracing data into your metrics pipeline — you get token usa
 5. **Register early** — Span processors must be registered before creating agents/runners.
 6. **Debug endpoints** — REST API exposes per-event trace data and execution graph visualization.
 7. **Metrics are yours to add** — ADK doesn't record metrics, but you can set up OTEL metrics in your app and even bridge ADK's span attributes into metrics via a custom span processor.
+
+---
+
+## Troubleshooting Common Issues
+
+This section documents real-world debugging scenarios encountered when building multi-agent workflows with ADK-Go, particularly focusing on state management, REST API usage, and workflow agent patterns.
+
+### Issue 1: Template Variables Not Being Replaced in Agent Instructions
+
+**Symptom:**
+Agents respond with "Please provide the data" even though the data exists in session state and the instruction contains `{template_variable}`.
+
+**Root Causes:**
+
+1. **Confusing prompt language**: The instruction said "You will receive data in the `state_variable`" which confused the LLM into thinking it needed to request access to state, even though the data was right there in the instruction after template replacement.
+
+   ```markdown
+   ## Input Format
+
+   You will receive the security event data in the `event_data` state variable:
+
+   **Event Data:**
+   {event_data}
+   ```
+
+   The phrase "in the state variable" made the LLM think it needed to fetch data from somewhere else.
+
+2. **Lack of explicit formatting**: The JSON data appeared on a single line without proper markdown code block formatting, making it less recognizable to the model.
+
+**Solution:**
+
+Remove confusing language and use explicit markdown code blocks:
+
+```markdown
+## Input Format
+
+**You have been provided with the following security event to analyze:**
+
+```json
+{event_data}
+```
+
+The event JSON has this structure:
+...
+```
+
+**Key Learnings:**
+- Template variable replacement (`{key}` → value via `fmt.Sprintf("%v", value)`) happens automatically in `Instruction` field via `InjectSessionState()` in `instruction_processor.go:87`
+- Make instructions explicit and clear - avoid meta-references to "state" or "variables"
+- Use proper markdown formatting (code blocks) to help the LLM recognize structured data
+- The model reads the instruction AFTER template replacement, so the data is literally present in the instruction text
+
+**Debugging Tips:**
+- Add logging in `onBeforeModelCallback` to inspect the instruction after template replacement:
+
+  ```go
+  func onBeforeModelCallback(ctx agent.CallbackContext, llmrequest *model.LLMRequest) (*model.LLMResponse, error) {
+      instruction := ""
+      if llmrequest.Config != nil && llmrequest.Config.SystemInstruction != nil {
+          for _, part := range llmrequest.Config.SystemInstruction.Parts {
+              if part.Text != "" {
+                  instruction = part.Text
+                  break
+              }
+          }
+      }
+
+      slog.Info("onBeforeModelCallback",
+          slog.String("instruction_preview", instruction[:min(500, len(instruction))]),
+      )
+      return nil, nil
+  }
+  ```
+
+- This shows you exactly what the LLM receives, confirming whether template replacement occurred
+
+---
+
+### Issue 2: stateDelta in REST API Not Working
+
+**Symptom:**
+Sending `stateDelta` in `RunAgentRequest` results in error: "failed to get key 'event_data' from state: state key does not exist"
+
+**Root Cause:**
+The `stateDelta` field is **defined in the model** (`runtime.go:34`) but **never actually processed** by the runtime controller (`runtime.go:66-87`). This is a gap in the current ADK REST API implementation.
+
+```go
+// Defined but not used:
+type RunAgentRequest struct {
+    AppName    string                 `json:"appName"`
+    UserId     string                 `json:"userId"`
+    SessionId  string                 `json:"sessionId"`
+    NewMessage genai.Content          `json:"newMessage"`
+    StateDelta map[string]interface{} `json:"stateDelta"` // NOT PROCESSED!
+}
+```
+
+**Attempted Workaround #1: PATCH Session State**
+Tried to update session state via PATCH request - but no PATCH endpoint exists in `sessions.go`.
+
+**Working Solution: Create Session with Initial State**
+
+Instead of using `stateDelta`, create (or recreate) the session with initial state:
+
+```go
+func sendEvent(event SecurityEvent) error {
+    eventJSON, _ := json.Marshal(event)
+
+    // Delete existing session
+    deleteSession()
+
+    // Create session WITH initial state
+    sessionPayload := map[string]interface{}{
+        "state": map[string]interface{}{
+            "event_data": string(eventJSON),
+        },
+    }
+
+    payloadJSON, _ := json.Marshal(sessionPayload)
+    http.Post(sessionURL, "application/json", bytes.NewBuffer(payloadJSON))
+
+    // Now run the agent - state exists
+    http.Post(runURL, "application/json", bytes.NewBuffer(runRequest))
+}
+```
+
+**API Endpoints:**
+```bash
+# Create session with initial state
+POST /api/apps/{appName}/users/{userId}/sessions/{sessionId}
+{
+  "state": {
+    "key1": "value1",
+    "key2": "value2"
+  }
+}
+
+# Run agent (uses existing session state)
+POST /api/run
+{
+  "appName": "myapp",
+  "userId": "user1",
+  "sessionId": "session1",
+  "newMessage": {
+    "role": "user",
+    "parts": [{"text": "Analyze the data"}]
+  }
+}
+```
+
+**Key Learnings:**
+- **stateDelta is not implemented** despite being in the API model - this may be fixed in future versions
+- Session state must be set via **session creation endpoint**, not via `/api/run`
+- For event-driven workflows, the pattern is: `DELETE session → CREATE session with state → RUN agent`
+- Session state persists across multiple `/api/run` calls to the same session
+
+**Code Reference:**
+- Session creation with state: `server/adkrest/controllers/sessions.go:65-81`
+- State field is passed to service: `session.CreateRequest.State` on line 70
+
+---
+
+### Issue 3: Tool Validation Errors - Nil Slice Returning `null`
+
+**Symptom:**
+Tool execution succeeds but fails validation: `"validating root: validating /properties/events: type: <invalid reflect.Value> has type "null", want "array"`
+
+**Root Cause:**
+Go's `var result []Type` declares a **nil slice**, which marshals to JSON `null` instead of empty array `[]`.
+
+```go
+// WRONG - nil slice marshals to null
+func GetEvents() ([]Event, error) {
+    var result []Event  // result is nil
+
+    // If no events match, returns nil
+    return result, nil  // Marshals to: {"events": null}
+}
+```
+
+**Solution:**
+Initialize as empty slice instead:
+
+```go
+// CORRECT - empty slice marshals to []
+func GetEvents() ([]Event, error) {
+    result := []Event{}  // result is empty slice, not nil
+
+    // If no events match, returns []
+    return result, nil  // Marshals to: {"events": []}
+}
+```
+
+**Key Learnings:**
+- JSON schemas expect `[]` for empty arrays, not `null`
+- Always initialize slices as `[]Type{}` when they might be returned empty
+- This applies to all tool return types with array fields
+
+**Pattern to Follow:**
+```go
+type ToolResult struct {
+    Items []Item `json:"items"`  // Schema expects array
+}
+
+func MyTool() (ToolResult, error) {
+    // Initialize empty, not nil
+    result := ToolResult{
+        Items: []Item{},  // Explicit empty slice
+    }
+
+    // Populate if needed
+    for _, item := range source {
+        if matches(item) {
+            result.Items = append(result.Items, item)
+        }
+    }
+
+    return result, nil  // Always returns valid JSON
+}
+```
+
+---
+
+### Issue 4: Tool Parameter Validation - Required vs Optional
+
+**Symptom:**
+Tool call fails with: `"validating root: required: missing properties: [\"event_types\"]"`
+
+**Root Cause:**
+Tool parameter was marked as required, but the LLM didn't provide it because semantically it should be optional (e.g., searching for ALL event types).
+
+```go
+// TOO STRICT - forces LLM to always provide event_types
+type QueryArgs struct {
+    Location   string   `json:"location"`
+    EventTypes []string `json:"event_types"`  // Required
+}
+```
+
+**Solution:**
+Use `omitempty` tag and add clear descriptions:
+
+```go
+// FLEXIBLE - LLM can omit optional parameters
+type QueryArgs struct {
+    Location   string   `json:"location" description:"Event location (building, floor, zone, or site)"`
+    EventTypes []string `json:"event_types,omitempty" description:"Optional: Specific event types to filter. Leave empty to get all event types."`
+    Severity   string   `json:"severity,omitempty" description:"Optional: Filter by severity (CRITICAL, HIGH, MEDIUM, LOW). Leave empty for all severities."`
+}
+```
+
+**Key Learnings:**
+- Use `omitempty` for truly optional parameters
+- Provide detailed descriptions that explain when to omit parameters
+- Give examples in descriptions: `"e.g., 'video.detection', 'access.denied'"`
+- Consider the semantic meaning: "all events" often means "omit filter"
+
+**Pattern for Tool Definitions:**
+```go
+type ToolArgs struct {
+    // Required - no omitempty, no description about optionality
+    EventID string `json:"event_id" description:"Unique event identifier"`
+
+    // Optional - has omitempty, description explains optionality
+    TimeWindow int `json:"time_window,omitempty" description:"Optional: Minutes to look back (default: 30)"`
+
+    // Optional array - empty means "all"
+    Tags []string `json:"tags,omitempty" description:"Optional: Filter by tags. Leave empty for all tags."`
+}
+```
+
+---
+
+### Issue 5: Nil Pointer Dereference in Callback
+
+**Symptom:**
+Panic: `runtime error: invalid memory address or nil pointer dereference` in tool callback
+
+```
+panic: runtime error: invalid memory address or nil pointer dereference
+at tools/monitor.go:49
+```
+
+**Root Cause:**
+Callback unconditionally called `err.Error()` even when `err` was `nil`:
+
+```go
+func OnAfterTool(ctx tool.Context, t tool.Tool, _ map[string]any, result map[string]any, err error) (map[string]any, error) {
+    // WRONG - panics if err is nil
+    lgr.Logger.Info("tool execution",
+        slog.String("error", err.Error()),  // ← Panic here!
+    )
+    return result, nil
+}
+```
+
+**Solution:**
+Always check for nil before accessing error:
+
+```go
+func OnAfterTool(ctx tool.Context, t tool.Tool, _ map[string]any, result map[string]any, err error) (map[string]any, error) {
+    // CORRECT - check for nil first
+    errMsg := ""
+    if err != nil {
+        errMsg = err.Error()
+    }
+
+    lgr.Logger.Info("tool execution",
+        slog.String("error", errMsg),
+    )
+    return result, nil
+}
+```
+
+**Key Learnings:**
+- Tool callbacks receive `err` parameter that may be `nil` on success
+- Always check `if err != nil` before calling methods on error
+- Same pattern applies to all callbacks: `AfterModelCallback`, `BeforeToolCallback`, etc.
+
+**Common Callback Pattern:**
+```go
+func MyCallback(ctx Context, param SomeType, err error) (Result, error) {
+    // Safe error handling
+    if err != nil {
+        log.Error("operation failed", "error", err.Error())
+        // Optionally transform or wrap error
+        return nil, fmt.Errorf("callback failed: %w", err)
+    }
+
+    // Process success case
+    log.Info("operation succeeded")
+    return result, nil
+}
+```
+
+---
+
+### Issue 6: HTTP Timeout for Long-Running Agent Workflows
+
+**Symptom:**
+Agents complete successfully in logs, but client receives 500 error. Server logs show:
+```
+"http: superfluous response.WriteHeader call"
+status:500 duration:"23.044s"
+```
+
+**Root Cause:**
+HTTP server `WriteTimeout` was too short (15 seconds) for multi-agent workflows that take 20+ seconds:
+
+```go
+server := &http.Server{
+    Addr:         ":8080",
+    Handler:      handler,
+    ReadTimeout:  15 * time.Second,
+    WriteTimeout: 15 * time.Second,  // ← TOO SHORT!
+}
+```
+
+**Solution:**
+Match write timeout to ADK handler timeout (usually 120 seconds):
+
+```go
+// ADK handler with 120 second timeout
+adkHandler := adkrest.NewHandler(config, 120*time.Second)
+
+// HTTP server should match or exceed
+server := &http.Server{
+    Addr:         ":8080",
+    Handler:      handler,
+    ReadTimeout:  30 * time.Second,
+    WriteTimeout: 120 * time.Second,  // Match ADK timeout
+    IdleTimeout:  60 * time.Second,
+}
+```
+
+**Key Learnings:**
+- Multi-agent workflows (especially with parallel sub-agents) can take 15-30+ seconds
+- Server write timeout should match or exceed the ADK handler timeout
+- Consider using SSE endpoint (`/api/run-sse`) for real-time streaming of long workflows
+- Monitor actual workflow duration in logs to set appropriate timeouts
+
+**Timeout Planning:**
+```
+Typical Workflow Timing:
+- Single LLM agent: 2-5 seconds
+- Agent with 1-2 tool calls: 5-10 seconds
+- Parallel workflow (3 agents): 10-20 seconds
+- Sequential workflow: 20-40 seconds
+- Complex multi-agent with multiple tool rounds: 30-60 seconds
+
+Server Timeout Recommendations:
+- Development: 120 seconds (generous for debugging)
+- Production: 60-90 seconds (with monitoring/alerting)
+- For very long workflows: Use SSE streaming
+```
+
+---
+
+### Issue 7: Tool Compatibility - functiontool.New() with Gemini API
+
+**Symptom:**
+Error when using custom tools: `"Tool use with function calling is unsupported"`
+
+**Root Cause:**
+`functiontool.New()` generates tool schemas that are incompatible with the Gemini API (requires Vertex AI).
+
+```go
+// Works with Vertex AI, fails with Gemini API
+tool, err := functiontool.New(functiontool.Config{
+    Name:        "my_tool",
+    Description: "Does something",
+}, myFunc)
+```
+
+**Solution:**
+
+**Option 1: Use Vertex AI**
+```go
+// Set environment variable to use Vertex AI
+// GOOGLE_GENAI_USE_VERTEXAI=1
+
+// Or configure explicitly
+m, err := gemini.NewModel(ctx, "gemini-2.5-flash", nil)  // nil = use Vertex AI
+```
+
+**Option 2: Manual Tool Implementation**
+```go
+// Implement tool.Tool interface directly
+type MyTool struct{}
+
+func (t *MyTool) Name() string { return "my_tool" }
+func (t *MyTool) Description() string { return "Does something" }
+func (t *MyTool) InputSchema() *genai.Schema {
+    return &genai.Schema{
+        Type: genai.TypeObject,
+        Properties: map[string]*genai.Schema{
+            "param": {Type: genai.TypeString, Description: "Parameter description"},
+        },
+        Required: []string{"param"},
+    }
+}
+func (t *MyTool) Run(ctx tool.Context, input map[string]any) (map[string]any, error) {
+    // Tool implementation
+    return map[string]any{"result": "value"}, nil
+}
+```
+
+**Key Learnings:**
+- `functiontool.New()` is convenient but has compatibility limitations
+- Gemini API vs Vertex AI have different tool schema requirements
+- Manual tool implementation gives full control and compatibility
+- Use built-in tools (like `geminitool.GoogleSearch`) when available - they're compatible with both
+
+**Tool Selection Guide:**
+```
+Use functiontool.New() when:
+- Using Vertex AI (not Gemini API)
+- Rapid prototyping
+- Simple tool schemas
+
+Use manual implementation when:
+- Need Gemini API compatibility
+- Complex schema requirements
+- Fine control over input validation
+- Production deployments requiring stability
+```
+
+---
+
+### Issue 8: Mixing GoogleSearch with Function Calling Tools
+
+**Symptom:**
+Error on Vertex AI: `"Multiple tools are supported only when they are all search tools"`
+
+**Root Cause:**
+Vertex AI doesn't allow mixing **grounding tools** (GoogleSearch) with **function calling tools** in the same agent.
+
+```go
+// FAILS on Vertex AI
+tools := []tool.Tool{
+    geminitool.GoogleSearch{},      // Grounding tool
+    myCustomTool,                    // Function calling tool
+}
+```
+
+**Solution:**
+Choose one or the other per agent:
+
+```go
+// Option 1: Use only function calling tools
+tools := []tool.Tool{
+    weatherTool,
+    databaseTool,
+    calculatorTool,
+}
+
+// Option 2: Use only grounding tools
+tools := []tool.Tool{
+    geminitool.GoogleSearch{},
+    // No custom function tools
+}
+```
+
+**Key Learnings:**
+- GoogleSearch is a "grounding" tool, not a "function calling" tool
+- Vertex AI enforces strict separation between grounding and function calling
+- Consider creating separate agents: one for web search, one for custom tools
+- Use workflow agents to coordinate between search agent and tool agent
+
+**Multi-Agent Pattern:**
+```go
+// Agent 1: Web research (grounding only)
+webAgent := llmagent.New(llmagent.Config{
+    Name: "web_researcher",
+    Tools: []tool.Tool{geminitool.GoogleSearch{}},
+})
+
+// Agent 2: Data processing (function calling only)
+dataAgent := llmagent.New(llmagent.Config{
+    Name: "data_processor",
+    Tools: []tool.Tool{databaseTool, calculatorTool},
+})
+
+// Coordinate via SequentialAgent
+rootAgent := sequentialagent.New(sequentialagent.Config{
+    SubAgents: []agent.Agent{webAgent, dataAgent},
+})
+```
+
+---
+
+### Issue 9: Filtering Large API Responses
+
+**Symptom:**
+REST API returns huge JSON responses with every event, tool call, and metadata making it hard to see actual results.
+
+**Root Cause:**
+ADK REST API returns **complete event stream** including:
+- Function calls (tool invocations)
+- Function responses (tool results)
+- Intermediate agent outputs
+- Metadata (thoughtSignature, branches, timestamps)
+
+**Solution:**
+Client-side filtering to extract meaningful outputs:
+
+```go
+// Parse response
+var events []map[string]interface{}
+json.Unmarshal(body, &events)
+
+// Extract agent outputs from stateDelta
+agentOutputs := make(map[string]string)
+for _, event := range events {
+    if actions, ok := event["actions"].(map[string]interface{}); ok {
+        if stateDelta, ok := actions["stateDelta"].(map[string]interface{}); ok {
+            for key, value := range stateDelta {
+                if strValue, ok := value.(string); ok && strValue != "" {
+                    agentOutputs[key] = strValue
+                }
+            }
+        }
+    }
+}
+
+// Print only meaningful outputs
+fmt.Println("Triage:", agentOutputs["triage_output"])
+fmt.Println("Correlation:", agentOutputs["correlation_output"])
+fmt.Println("Runbooks:", agentOutputs["runbooks_output"])
+```
+
+**Key Learnings:**
+- OutputKey saves agent output to `stateDelta` in events
+- Final outputs accumulate across events (last non-empty value wins)
+- The final response is in the last event's `content.parts[].text`
+- For production, consider creating a custom endpoint that returns only final outputs
+
+**Event Stream Structure:**
+```json
+[
+  {
+    "id": "event-1",
+    "author": "agent_name",
+    "content": {"parts": [{"functionCall": {...}}]},  // Tool invocation
+    "actions": {"stateDelta": {"output_key": ""}}
+  },
+  {
+    "id": "event-2",
+    "content": {"parts": [{"functionResponse": {...}}]},  // Tool result
+    "actions": {"stateDelta": {"output_key": ""}}
+  },
+  {
+    "id": "event-3",
+    "content": {"parts": [{"text": "Final output"}]},  // Agent output
+    "actions": {"stateDelta": {"output_key": "Final output"}}  // Saved here
+  }
+]
+```
+
+**Filtering Strategies:**
+
+1. **Extract by OutputKey**: Get final agent outputs from stateDelta
+2. **Filter by author**: Show only specific agent's events
+3. **Filter by content type**: Show only text responses, hide tool calls
+4. **Get last event**: Often contains the final result
+
+---
+
+### Debugging Best Practices
+
+Based on these troubleshooting scenarios, here are recommended debugging practices:
+
+#### 1. Comprehensive Logging
+
+Add callbacks to inspect agent execution:
+
+```go
+func onBeforeModelCallback(ctx agent.CallbackContext, req *model.LLMRequest) (*model.LLMResponse, error) {
+    // Log instruction after template replacement
+    instruction := extractInstruction(req)
+    log.Info("Before LLM call",
+        "agent", ctx.AgentName(),
+        "model", req.Model,
+        "instruction_preview", instruction[:min(500, len(instruction))],
+    )
+    return nil, nil
+}
+
+func onAfterModelCallback(ctx agent.CallbackContext, resp *model.LLMResponse, err error) (*model.LLMResponse, error) {
+    errMsg := "none"
+    if err != nil {
+        errMsg = err.Error()
+    }
+
+    log.Info("After LLM call",
+        "agent", ctx.AgentName(),
+        "error", errMsg,
+        "tokens", resp.UsageMetadata.TotalTokenCount,
+    )
+    return resp, err
+}
+
+func onBeforeToolCallback(ctx tool.Context, t tool.Tool, args map[string]any) (map[string]any, error) {
+    log.Info("Before tool",
+        "tool", t.Name(),
+        "args", args,
+    )
+    return nil, nil
+}
+
+func onAfterToolCallback(ctx tool.Context, t tool.Tool, args, result map[string]any, err error) (map[string]any, error) {
+    errMsg := ""
+    if err != nil {
+        errMsg = err.Error()
+    }
+
+    log.Info("After tool",
+        "tool", t.Name(),
+        "duration", time.Since(startTime),
+        "error", errMsg,
+    )
+    return result, err
+}
+```
+
+#### 2. Session State Verification
+
+When debugging state issues, verify session creation:
+
+```go
+// After creating session with state, verify it was saved
+resp, _ := http.Get(sessionURL)
+body, _ := io.ReadAll(resp.Body)
+var session map[string]interface{}
+json.Unmarshal(body, &session)
+
+fmt.Printf("Session state: %+v\n", session["state"])
+```
+
+#### 3. Template Variable Testing
+
+Test instruction template replacement independently:
+
+```go
+// Create test context with known state
+ctx := createTestContext(map[string]interface{}{
+    "test_key": "test_value",
+})
+
+// Test template replacement
+template := "Here is the data: {test_key}"
+result, err := llminternal.InjectSessionState(ctx, template)
+
+fmt.Printf("Before: %s\n", template)
+fmt.Printf("After:  %s\n", result)
+// Should print: "Here is the data: test_value"
+```
+
+#### 4. Response Filtering Utility
+
+Create a helper to parse API responses:
+
+```go
+func ExtractAgentOutputs(events []map[string]interface{}) map[string]string {
+    outputs := make(map[string]string)
+
+    for _, event := range events {
+        if actions, ok := event["actions"].(map[string]interface{}); ok {
+            if stateDelta, ok := actions["stateDelta"].(map[string]interface{}); ok {
+                for key, value := range stateDelta {
+                    if strValue, ok := value.(string); ok && strValue != "" {
+                        outputs[key] = strValue
+                    }
+                }
+            }
+        }
+    }
+
+    return outputs
+}
+
+func ExtractFinalResponse(events []map[string]interface{}) string {
+    // Iterate backwards to find last text content
+    for i := len(events) - 1; i >= 0; i-- {
+        if content, ok := events[i]["content"].(map[string]interface{}); ok {
+            if parts, ok := content["parts"].([]interface{}); ok {
+                for _, part := range parts {
+                    if partMap, ok := part.(map[string]interface{}); ok {
+                        if text, ok := partMap["text"].(string); ok {
+                            return text
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return ""
+}
+```
+
+#### 5. Timeout Monitoring
+
+Track actual workflow duration:
+
+```go
+func (s *Server) runWithMonitoring(ctx context.Context, req RunRequest) ([]Event, error) {
+    start := time.Now()
+    defer func() {
+        duration := time.Since(start)
+        log.Info("Workflow completed",
+            "duration", duration,
+            "duration_seconds", duration.Seconds(),
+        )
+
+        // Alert if approaching timeout
+        if duration > 100*time.Second {
+            log.Warn("Workflow approaching timeout threshold")
+        }
+    }()
+
+    return s.runner.Run(ctx, req)
+}
+```
+
+---
+
+### Summary of Key Patterns
+
+1. **State Injection**: Use session creation endpoint, not stateDelta (which isn't implemented)
+2. **Template Variables**: Use explicit formatting and avoid meta-references to "state"
+3. **Tool Schemas**: Initialize slices as `[]Type{}` not `var result []Type`
+4. **Optional Parameters**: Use `omitempty` tag with clear descriptions
+5. **Error Handling**: Always check `if err != nil` before calling methods on errors
+6. **Timeouts**: Match server timeout to ADK handler timeout (typically 120s)
+7. **Tool Compatibility**: Use Vertex AI for `functiontool.New()` or implement tool.Tool manually
+8. **Response Filtering**: Extract agent outputs from stateDelta, final text from last event
+9. **Debugging**: Add comprehensive logging callbacks to trace execution flow
+
+These patterns emerged from building a real-world multi-agent security event processor and represent battle-tested solutions to common ADK-Go integration challenges.
