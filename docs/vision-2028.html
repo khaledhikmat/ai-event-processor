@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physical Security - AI-Powered Vision 2030</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a365d;
+            --primary-light: #2c5282;
+            --accent: #3182ce;
+            --text: #1a202c;
+            --text-secondary: #4a5568;
+            --bg: #ffffff;
+            --bg-secondary: #f7fafc;
+            --border: #e2e8f0;
+            --success: #38a169;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--primary);
+            color: white;
+            padding: 2rem 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        nav h2 {
+            font-size: 1.2rem;
+            padding: 0 1.5rem 1rem;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            margin-bottom: 1rem;
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav a {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        nav a:hover, nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: var(--accent);
+        }
+
+        nav .sub-item {
+            padding-left: 2.5rem;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: 280px;
+            padding: 3rem 4rem;
+            max-width: 1400px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 4rem;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .hero .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        /* Section Styles */
+        section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            color: var(--primary-light);
+            margin: 2rem 0 1rem;
+        }
+
+        h4 {
+            font-size: 1.3rem;
+            color: var(--text);
+            margin: 1.5rem 0 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Vision Statement */
+        .vision-statement {
+            background: var(--bg-secondary);
+            border-left: 6px solid var(--accent);
+            padding: 2rem;
+            margin: 2rem 0;
+            font-size: 1.25rem;
+            font-style: italic;
+            color: var(--primary);
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+
+        .card h4 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+
+        .card .label {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Lists */
+        ul {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: var(--primary);
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Architecture Diagram */
+        .architecture {
+            background: linear-gradient(to bottom, #f8f9fa 0%, white 100%);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .architecture-layer {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .architecture-layer h4 {
+            color: var(--primary);
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+        }
+
+        .architecture-layer::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 60%;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--accent), var(--success));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0.5rem;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border: 4px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px var(--accent);
+        }
+
+        .timeline-content {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .timeline-content .phase {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-content .year {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-card .value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card .label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-left: 6px solid var(--accent);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .highlight-box strong {
+            color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            nav {
+                transform: translateX(-100%);
+            }
+
+            nav.open {
+                transform: translateX(0);
+            }
+
+            main {
+                margin-left: 0;
+                padding: 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            nav {
+                display: none;
+            }
+
+            main {
+                margin-left: 0;
+            }
+
+            .card, .timeline-content {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <nav id="sidebar">
+        <h2>Navigation</h2>
+        <ul>
+            <li><a href="#hero">Overview</a></li>
+            <li><a href="#executive-summary">Executive Summary</a></li>
+            <li><a href="#current-state">Current State</a></li>
+            <li><a href="#strategic-pillars">Strategic Pillars</a></li>
+            <li><a href="#architecture">Technical Architecture</a></li>
+            <li><a href="#use-cases">AI Use Cases</a></li>
+            <li><a href="#roadmap">Implementation Roadmap</a></li>
+            <li><a href="#metrics">Success Metrics</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <div class="hero" id="hero">
+            <h1>PHYSICAL SECURITY</h1>
+            <div class="subtitle">AI-Powered Vision 2030</div>
+            <div class="badge">5-Year Strategic Vision</div>
+        </div>
+
+        <section id="executive-summary">
+            <h2>Executive Summary</h2>
+            
+            <div class="vision-statement">
+                By 2030, our organization will operate the industry's most advanced AI-powered physical security platform—a unified, intelligent ecosystem that proactively protects our people and assets through real-time threat detection, automated incident response, and predictive analytics, while maintaining the highest standards of privacy and regulatory compliance.
+            </div>
+
+            <h3>Key Transformation Goals</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h4>🎯 Unified Intelligence Platform</h4>
+                    <p>Centralized data lake ingesting events from all 8 security systems in real-time</p>
+                </div>
+                <div class="card">
+                    <h4>🤖 AI-Driven Detection</h4>
+                    <p>Advanced computer vision and behavioral analytics across 3,000 cameras</p>
+                </div>
+                <div class="card">
+                    <h4>⚡ Automated Response</h4>
+                    <p>Intelligent workflows coordinating responses across all systems</p>
+                </div>
+                <div class="card">
+                    <h4>📊 Predictive Operations</h4>
+                    <p>ML models identifying patterns and predicting incidents before they occur</p>
+                </div>
+                <div class="card">
+                    <h4>🔒 Compliance by Design</h4>
+                    <p>Privacy protection and audit trails built into the architecture</p>
+                </div>
+            </div>
+
+            <h3>Expected Outcomes</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="value">70%</div>
+                    <div class="label">Faster Threat Detection</div>
+                </div>
+                <div class="metric-card">
+                    <div class="value">85%</div>
+                    <div class="label">Fewer False Positives</div>
+                </div>
+                <div class="metric-card">
+                    <div class="value">60%</div>
+                    <div class="label">Productivity Improvement</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="current-state">
+            <h2>Current State Assessment</h2>
+            
+            <h3>Infrastructure Inventory</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>System/Asset</th>
+                        <th>Count</th>
+                        <th>Current Capability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cameras</strong></td>
+                        <td>~3,000</td>
+                        <td>NVR storage, varying AI capabilities</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Detection Sensors</strong></td>
+                        <td>~1,500</td>
+                        <td>Acoustic shot detection system</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Intercom Devices</strong></td>
+                        <td>~600</td>
+                        <td>Communication system</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Radio Devices</strong></td>
+                        <td>~100</td>
+                        <td>Security team communication</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weapon Lockers</strong></td>
+                        <td>~10</td>
+                        <td>Secure storage with tracking</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Critical Gaps and Challenges</h3>
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Siloed Systems</h4>
+                    <p>Limited integration between security platforms. Systems operate independently, preventing comprehensive situational awareness.</p>
+                </div>
+                <div class="card">
+                    <h4>No Centralized Data Platform</h4>
+                    <p>Events and logs are not aggregated, preventing holistic analysis and enterprise-wide reporting.</p>
+                </div>
+                <div class="card">
+                    <h4>Limited AI Deployment</h4>
+                    <p>AI threat detection selected but not yet deployed. Lack of AI-driven workflows for assessment and response.</p>
+                </div>
+                <div class="card">
+                    <h4>Manual Processes</h4>
+                    <p>Heavy reliance on manual intervention for investigation, evidence gathering, and cross-system coordination.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="strategic-pillars">
+            <h2>Strategic Pillars</h2>
+            
+            <div class="card">
+                <div class="label">Pillar 1</div>
+                <h3>Unified Data & Intelligence Platform</h3>
+                <p><strong>Objective:</strong> Create a centralized security data lake that ingests, normalizes, and analyzes events from all security systems in real-time.</p>
+                <h4>Key Capabilities</h4>
+                <ul>
+                    <li>Real-time event streaming from all 8 security systems</li>
+                    <li>Unified data model for cross-system correlation</li>
+                    <li>Enterprise search across all security events</li>
+                    <li>Compliance-ready data retention and privacy controls</li>
+                    <li>API-first architecture enabling third-party integrations</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="label">Pillar 2</div>
+                <h3>AI-Driven Threat Detection & Prevention</h3>
+                <p><strong>Objective:</strong> Deploy advanced AI models across all cameras and sensors to automatically detect, classify, and respond to security threats.</p>
+                <h4>Key Capabilities</h4>
+                <ul>
+                    <li>Weapon detection (firearms, knives, prohibited items)</li>
+                    <li>Behavioral anomaly detection (aggression, loitering, tailgating)</li>
+                    <li>Unauthorized access detection via facial recognition</li>
+                    <li>Safety compliance monitoring (PPE detection)</li>
+                    <li>Audio analytics for gunshots and distress calls</li>
+                    <li>Crowd density and flow analysis</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="label">Pillar 3</div>
+                <h3>Intelligent Automation & Orchestration</h3>
+                <p><strong>Objective:</strong> Automate routine security operations and enable coordinated responses during incidents.</p>
+                <h4>Key Capabilities</h4>
+                <ul>
+                    <li>Automated incident workflow creation and assignment</li>
+                    <li>Coordinated lockdown procedures across all systems</li>
+                    <li>Intelligent camera steering to track subjects</li>
+                    <li>Automated evidence collection and chain-of-custody</li>
+                    <li>Self-service incident reporting via mobile apps</li>
+                    <li>Integration with HR and facility management systems</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="label">Pillar 4</div>
+                <h3>Predictive Analytics & Continuous Improvement</h3>
+                <p><strong>Objective:</strong> Use ML to predict security incidents, optimize operations, and improve system performance.</p>
+                <h4>Key Capabilities</h4>
+                <ul>
+                    <li>Pattern recognition for incident precursors</li>
+                    <li>Risk scoring for individuals, locations, time periods</li>
+                    <li>Predictive maintenance for cameras and sensors</li>
+                    <li>Optimal patrol routing and resource allocation</li>
+                    <li>False positive reduction through continuous training</li>
+                    <li>Security KPI dashboards with predictive insights</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="label">Pillar 5</div>
+                <h3>Privacy, Compliance & Trust</h3>
+                <p><strong>Objective:</strong> Build trust through transparent, compliant, and ethical use of AI and data.</p>
+                <h4>Key Capabilities</h4>
+                <ul>
+                    <li>Privacy-by-design architecture with data minimization</li>
+                    <li>Configurable data retention policies by jurisdiction</li>
+                    <li>Comprehensive audit logs for all system access</li>
+                    <li>Role-based access controls with separation of duties</li>
+                    <li>Bias detection and fairness monitoring in AI models</li>
+                    <li>Transparent disclosure of surveillance capabilities</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="architecture">
+            <h2>Technical Architecture</h2>
+            <p>Our cloud-native architecture consists of five interconnected layers built on AWS infrastructure:</p>
+
+            <div class="architecture">
+                <div class="architecture-layer">
+                    <h4>1. Edge Intelligence Layer</h4>
+                    <p><strong>Purpose:</strong> Process video and sensor data at the edge for low-latency detection</p>
+                    <ul>
+                        <li><strong>AWS Panorama Appliances:</strong> Deploy CV models on camera infrastructure</li>
+                        <li><strong>AWS IoT Greengrass:</strong> Run ML inference on edge devices (NVRs, gateways)</li>
+                        <li><strong>SageMaker Edge Manager:</strong> Deploy and update ML models across 3,000+ cameras</li>
+                    </ul>
+                </div>
+
+                <div class="architecture-layer">
+                    <h4>2. Data Ingestion & Streaming Layer</h4>
+                    <p><strong>Purpose:</strong> Collect and stream events from all security systems into the cloud</p>
+                    <ul>
+                        <li><strong>Amazon Kinesis Data Streams:</strong> High-throughput, real-time event streaming</li>
+                        <li><strong>Amazon MSK (Managed Kafka):</strong> Durable message queuing for critical events</li>
+                        <li><strong>AWS IoT Core:</strong> Secure MQTT connections for sensors and IoT devices</li>
+                    </ul>
+                </div>
+
+                <div class="architecture-layer">
+                    <h4>3. AI/ML Processing Layer</h4>
+                    <p><strong>Purpose:</strong> Apply ML models for threat detection, pattern recognition, analytics</p>
+                    <ul>
+                        <li><strong>Amazon Rekognition:</strong> Facial analysis, PPE detection, object recognition</li>
+                        <li><strong>Amazon SageMaker:</strong> Custom ML model training and deployment</li>
+                        <li><strong>Amazon Bedrock:</strong> Generative AI for incident summarization and queries</li>
+                        <li><strong>AWS Lambda:</strong> Serverless inference and event-driven execution</li>
+                    </ul>
+                </div>
+
+                <div class="architecture-layer">
+                    <h4>4. Data Platform Layer</h4>
+                    <p><strong>Purpose:</strong> Store, index, and query massive volumes of security data</p>
+                    <ul>
+                        <li><strong>Amazon S3:</strong> Object storage for video archives with intelligent tiering</li>
+                        <li><strong>Amazon Timestream:</strong> Time-series database for sensor data and event logs</li>
+                        <li><strong>Amazon OpenSearch:</strong> Full-text search and analytics across all events</li>
+                        <li><strong>Amazon Aurora PostgreSQL:</strong> Relational database for incident management</li>
+                        <li><strong>AWS Lake Formation:</strong> Data lake governance with access controls</li>
+                    </ul>
+                </div>
+
+                <div class="architecture-layer">
+                    <h4>5. Application & Integration Layer</h4>
+                    <p><strong>Purpose:</strong> Provide user interfaces, APIs, and integrations</p>
+                    <ul>
+                        <li><strong>Amazon EKS:</strong> Container orchestration for SOC applications</li>
+                        <li><strong>AWS AppSync:</strong> GraphQL API for real-time dashboards and mobile apps</li>
+                        <li><strong>Amazon API Gateway:</strong> RESTful APIs for third-party integrations</li>
+                        <li><strong>AWS Step Functions:</strong> Orchestrate complex incident response workflows</li>
+                        <li><strong>Amazon EventBridge:</strong> Event-driven architecture for cross-system automation</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="use-cases">
+            <h2>Key AI Use Cases</h2>
+
+            <div class="card">
+                <h3>1. Real-Time Weapon Detection</h3>
+                <p><strong>Challenge:</strong> Detecting firearms, knives, and prohibited items before they are used in an incident.</p>
+                <h4>AI Solution</h4>
+                <ul>
+                    <li>Computer vision models analyze video streams in real-time (30+ FPS)</li>
+                    <li>Edge inference ensures <100ms detection latency</li>
+                    <li>Automatic alert generation with video clip and location</li>
+                    <li>Integration with access control to automatically lock down affected areas</li>
+                    <li>Mobile notifications to security personnel with subject tracking</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Expected Impact:</strong> 95%+ weapon detection accuracy, <2 minute response time, potential to prevent violent incidents
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>2. Behavioral Anomaly Detection</h3>
+                <p><strong>Challenge:</strong> Identifying suspicious behavior that may indicate security threats.</p>
+                <h4>AI Solution</h4>
+                <ul>
+                    <li>Pose estimation and activity recognition models</li>
+                    <li>Baseline behavioral patterns per location and time-of-day</li>
+                    <li>Anomaly scoring based on deviation from normal patterns</li>
+                    <li>Contextual alerts (loitering near restricted areas is higher priority)</li>
+                    <li>Human-in-the-loop review for threshold tuning</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Expected Impact:</strong> 60% reduction in tailgating incidents, early warning for potential threats
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>3. Intelligent Video Search & Investigation</h3>
+                <p><strong>Challenge:</strong> Manual video review is time-consuming across 3,000 cameras.</p>
+                <h4>AI Solution</h4>
+                <ul>
+                    <li>Natural language search: "Show me all people wearing red jackets near Building A"</li>
+                    <li>Visual similarity search: Upload a photo, find matching appearances</li>
+                    <li>Object tracking: Follow a person or vehicle across multiple camera zones</li>
+                    <li>Automated highlight reels: AI generates summary clips of relevant events</li>
+                    <li>Metadata extraction: Automatic tagging of people, vehicles, objects, actions</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Expected Impact:</strong> 90% reduction in investigation time, improved evidence quality, faster incident resolution
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>4. Predictive Incident Analytics</h3>
+                <p><strong>Challenge:</strong> Security operates reactively. Can we predict where and when incidents are likely to occur?</p>
+                <h4>AI Solution</h4>
+                <ul>
+                    <li>Historical incident analysis to identify high-risk locations and time periods</li>
+                    <li>Correlation with external factors (weather, events, staffing levels)</li>
+                    <li>Risk heat maps updated in real-time</li>
+                    <li>Proactive patrol recommendations and resource allocation</li>
+                    <li>Early warning system for potential escalation patterns</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Expected Impact:</strong> 30% reduction in incidents through proactive intervention, optimized security staffing
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>5. Automated Incident Response Orchestration</h3>
+                <p><strong>Challenge:</strong> Coordinating responses across multiple systems is manual and error-prone.</p>
+                <h4>AI Solution</h4>
+                <ul>
+                    <li>AI classifies incident severity and type automatically</li>
+                    <li>Triggers predefined response workflows (lockdown, evacuation, medical response)</li>
+                    <li>Coordinates across systems: lock doors, alert personnel, dispatch responders</li>
+                    <li>Real-time situational awareness dashboard for incident commanders</li>
+                    <li>Automated evidence preservation (video clips, access logs, sensor data)</li>
+                    <li>Post-incident report generation with timeline and recommendations</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Expected Impact:</strong> 70% faster initial response, consistent execution of procedures, complete audit trail
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>6. Generative AI Security Assistant</h3>
+                <p><strong>Challenge:</strong> Security personnel need quick access to policies, procedures, and data insights.</p>
+                <h4>AI Solution</h4>
+                <ul>
+                    <li>Conversational interface powered by Amazon Bedrock (Claude, etc.)</li>
+                    <li>Natural language queries: "What's our policy on visitor escorts?" or "Show incident trends this month"</li>
+                    <li>Automated report generation and data visualization</li>
+                    <li>Intelligent recommendations based on historical data and best practices</li>
+                    <li>Training and onboarding assistance for new security personnel</li>
+                </ul>
+                <div class="highlight-box">
+                    <strong>Expected Impact:</strong> 50% reduction in time spent on reporting, improved decision-making, faster onboarding
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap">
+            <h2>5-Year Implementation Roadmap</h2>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="phase">Phase 1: Foundation</div>
+                        <div class="year">Year 1 - 2025</div>
+                        <p><strong>Objective:</strong> Establish core infrastructure and deploy first AI capabilities</p>
+                        <h4>Key Deliverables</h4>
+                        <ul>
+                            <li>Deploy centralized security data lake on AWS (S3, Timestream, OpenSearch)</li>
+                            <li>Connect 3 primary systems to data platform (Video, Access Control, Detection Sensors)</li>
+                            <li>Launch AI weapon detection across 500 high-priority cameras</li>
+                            <li>Implement basic incident correlation and unified alert dashboard</li>
+                            <li>Establish data governance framework and privacy controls</li>
+                            <li>Train security team on new platform and AI capabilities</li>
+                        </ul>
+                        <div class="highlight-box">
+                            <strong>Success Metrics:</strong> 80% of data in data lake | 90%+ weapon detection accuracy | 30% reduction in investigation time
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="phase">Phase 2: Expansion</div>
+                        <div class="year">Year 2 - 2026</div>
+                        <p><strong>Objective:</strong> Scale AI across all cameras and add behavioral analytics</p>
+                        <h4>Key Deliverables</h4>
+                        <ul>
+                            <li>Expand weapon detection to all 3,000 cameras</li>
+                            <li>Deploy behavioral anomaly detection (loitering, tailgating, aggressive behavior)</li>
+                            <li>Implement AI-powered video search and investigation tools</li>
+                            <li>Connect remaining systems (Intercom, Radio, Lockers) to data platform</li>
+                            <li>Launch mobile app for security personnel with real-time alerts</li>
+                            <li>Deploy AWS Panorama appliances for edge inference optimization</li>
+                        </ul>
+                        <div class="highlight-box">
+                            <strong>Success Metrics:</strong> All cameras AI-enabled | 70% reduction in investigation time | 100% of events in unified platform
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="phase">Phase 3: Automation</div>
+                        <div class="year">Year 3 - 2027</div>
+                        <p><strong>Objective:</strong> Automate incident response and enable predictive analytics</p>
+                        <h4>Key Deliverables</h4>
+                        <ul>
+                            <li>Implement automated incident response workflows (lockdowns, dispatch, notifications)</li>
+                            <li>Deploy predictive analytics for risk scoring and incident forecasting</li>
+                            <li>Launch generative AI security assistant (Amazon Bedrock)</li>
+                            <li>Integrate with HR and facility management systems for context-aware security</li>
+                            <li>Implement advanced analytics dashboards with predictive insights</li>
+                            <li>Deploy audio analytics for gunshot and distress detection</li>
+                        </ul>
+                        <div class="highlight-box">
+                            <strong>Success Metrics:</strong> 60% of incidents automated | 70%+ prediction accuracy | 50% reduction in admin tasks
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="phase">Phase 4: Optimization</div>
+                        <div class="year">Year 4 - 2028</div>
+                        <p><strong>Objective:</strong> Refine models, reduce false positives, optimize operations</p>
+                        <h4>Key Deliverables</h4>
+                        <ul>
+                            <li>Continuous model improvement through feedback loops and retraining</li>
+                            <li>Advanced person re-identification and tracking across camera networks</li>
+                            <li>Implement federated learning to improve models while preserving privacy</li>
+                            <li>Deploy explainable AI features for transparency and trust</li>
+                            <li>Optimize resource allocation based on predictive analytics</li>
+                            <li>Launch self-service analytics for security managers</li>
+                        </ul>
+                        <div class="highlight-box">
+                            <strong>Success Metrics:</strong> <2% false positive rate | 90%+ automation for routine operations | 30% incident reduction
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="phase">Phase 5: Innovation</div>
+                        <div class="year">Year 5 - 2029-2030</div>
+                        <p><strong>Objective:</strong> Push boundaries with emerging technologies and achieve vision state</p>
+                        <h4>Key Deliverables</h4>
+                        <ul>
+                            <li>Explore emerging technologies (drones, robots, augmented reality for security operations)</li>
+                            <li>Implement advanced threat intelligence integration (external feeds, social media monitoring)</li>
+                            <li>Deploy multi-modal AI (combining video, audio, sensor fusion)</li>
+                            <li>Launch digital twin of physical security infrastructure for simulation and planning</li>
+                            <li>Establish center of excellence to share learnings and best practices</li>
+                            <li>Achieve industry recognition as leader in AI-powered physical security</li>
+                        </ul>
+                        <div class="highlight-box">
+                            <strong>Success Metrics:</strong> Proactive threat prevention operational | Industry-leading outcomes | Platform as model for peers
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="metrics">
+            <h2>Success Metrics & KPIs</h2>
+
+            <h3>Operational Excellence</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>KPI</th>
+                        <th>2030 Target</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mean Time to Detect (MTTD)</td>
+                        <td>< 30 seconds (70% improvement)</td>
+                    </tr>
+                    <tr>
+                        <td>Mean Time to Respond (MTTR)</td>
+                        <td>< 2 minutes (60% improvement)</td>
+                    </tr>
+                    <tr>
+                        <td>Investigation Time</td>
+                        <td>90% reduction vs. manual review</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Security Effectiveness</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>KPI</th>
+                        <th>2030 Target</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Incident Prevention Rate</td>
+                        <td>30% reduction in incidents</td>
+                    </tr>
+                    <tr>
+                        <td>False Positive Rate</td>
+                        <td>< 2% (85% improvement)</td>
+                    </tr>
+                    <tr>
+                        <td>Threat Detection Coverage</td>
+                        <td>100% of cameras AI-enabled</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Technology Performance</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>KPI</th>
+                        <th>2030 Target</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>System Uptime</td>
+                        <td>99.9% availability</td>
+                    </tr>
+                    <tr>
+                        <td>Model Accuracy</td>
+                        <td>> 95% for all AI models</td>
+                    </tr>
+                    <tr>
+                        <td>Data Integration</td>
+                        <td>All 8 systems connected</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>People & Culture</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>KPI</th>
+                        <th>2030 Target</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Team Productivity</td>
+                        <td>60% improvement through automation</td>
+                    </tr>
+                    <tr>
+                        <td>Training Completion</td>
+                        <td>100% of staff AI-certified</td>
+                    </tr>
+                    <tr>
+                        <td>Employee Satisfaction</td>
+                        <td>Improved working conditions</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div class="hero">
+            <h2 style="color: white; border: none; margin-bottom: 1rem;">Together, we will build the future of physical security.</h2>
+            <p style="font-size: 1.2rem; opacity: 0.9;">This 5-year vision represents a transformative journey that will position our organization as an industry leader in AI-powered physical security.</p>
+        </div>
+    </main>
+
+    <script>
+        // Simple navigation highlighting
+        const sections = document.querySelectorAll('section, .hero');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 200)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

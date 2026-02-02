@@ -1,0 +1,45 @@
+# .gitignore is restricted to the artifacts produced by go build and test.
+# for personal setup you can use personal .gitignore: `git config --global core.excludesfile ~/.gitignore`
+
+logs
+*.log
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+**/build
+**/.dapr
+.terraform
+sample*
+dumps*
+cookies*
+settings
+recordings
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Go workspace file
+go.work
+go.work.sum

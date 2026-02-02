@@ -1,0 +1,158 @@
+[
+  {
+    "event_id": "evt-camera-20260103-230906-6442",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T23:09:06Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "2",
+      "zone": "hallway-south",
+      "camera_id": "cam-5-cafe-04"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-cafe-04",
+      "frame_number": 54964
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T23:09:06.113000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-031500-1234",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T03:15:00Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "reader_id": "reader-3-exec-01"
+    },
+    "severity": "HIGH",
+    "entities": [
+      {
+        "entity_type": "badge",
+        "entity_id": "badge-8888",
+        "attributes": {
+          "badge_status": "expired"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-3-exec-01",
+      "door_id": "door-building-3-exec-wing",
+      "denial_reason": "badge_expired"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:15:00.056000Z",
+      "tags": ["access-control", "after-hours"]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-140532-5678",
+    "event_type": "ai.detection.weapon",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T14:05:32Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance",
+      "camera_id": "cam-5-main-01"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-67890",
+        "attributes": {
+          "tracking_confidence": 0.94
+        }
+      }
+    ],
+    "payload": {
+      "detection_type": "firearm",
+      "confidence": 0.94,
+      "bounding_box": {
+        "x": 450,
+        "y": 320,
+        "width": 80,
+        "height": 120
+      },
+      "video_clip_s3_uri": "s3://security-clips/2026/01/03/cam-5-main-01-140532.mp4",
+      "frame_number": 45231
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T14:05:32.234000Z",
+      "tags": ["weapon", "critical", "immediate-response"]
+    }
+  },
+  {
+    "event_id": "evt-acoustic-20260103-023650-9876",
+    "event_type": "acoustic.gunshot.detected",
+    "source_system": "acoustic-shotspotter",
+    "timestamp": "2026-01-03T02:36:50Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "3",
+      "zone": "main-lobby",
+      "sensor_ids": ["sensor-444", "sensor-733", "sensor-204"]
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "sensors_triggered": ["sensor-444", "sensor-733", "sensor-204"],
+      "triangulation_accuracy_meters": 4.6,
+      "detection_confidence": 0.92,
+      "number_of_shots": 1,
+      "audio_signature": "single_gunshot",
+      "weapon_type_estimate": "handgun",
+      "audio_clip_s3_uri": "s3://security-audio/2026/01/03/gunshot-023650.wav"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T02:36:50.061000Z",
+      "tags": ["gunshot", "emergency", "immediate-response"]
+    }
+  },
+  {
+    "event_id": "evt-loitering-20260103-103045-4321",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T10:30:45Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "1",
+      "zone": "loading-dock",
+      "camera_id": "cam-4-dock-02"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-11223",
+        "attributes": {
+          "tracking_confidence": 0.87,
+          "loitering_duration_seconds": 420
+        }
+      }
+    ],
+    "payload": {
+      "loitering_duration_seconds": 420,
+      "activity_level": "minimal_movement",
+      "detection_confidence": 0.78,
+      "video_clip_s3_uri": "s3://security-clips/2026/01/03/cam-4-dock-02-103045.mp4"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T10:30:45.112000Z",
+      "tags": ["loitering", "suspicious-behavior"]
+    }
+  }
+]

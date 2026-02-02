@@ -1,0 +1,3524 @@
+[
+  {
+    "event_id": "evt-access-20260101-020648-9751",
+    "event_type": "access.tailgating",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-01T02:06:48Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "2",
+      "zone": "loading-dock",
+      "reader_id": "reader-5-cafe-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-5-cafe-01",
+      "door_id": "door-building-4-loading-dock"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T02:06:48.056000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-acoustic-20260101-023650-2646",
+    "event_type": "acoustic.gunshot.detected",
+    "source_system": "acoustic-shotspotter",
+    "timestamp": "2026-01-01T02:36:50Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "3",
+      "zone": "main-lobby",
+      "sensor_ids": [
+        "sensor-444",
+        "sensor-733",
+        "sensor-204",
+        "sensor-954"
+      ],
+      "triangulated_position": {
+        "x": 49.9,
+        "y": 72.5
+      }
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "sensors_triggered": [
+        "sensor-444",
+        "sensor-733",
+        "sensor-204",
+        "sensor-954"
+      ],
+      "triangulation_accuracy_meters": 4.6,
+      "detection_confidence": 0.92,
+      "number_of_shots": 1,
+      "audio_signature": "multiple_gunshots",
+      "weapon_type_estimate": "shotgun",
+      "audio_clip_s3_uri": "s3://security-audio/2026/01/01/gunshot-023650.wav"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T02:36:50.061000Z",
+      "tags": [
+        "gunshot",
+        "emergency",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-024708-9379",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T02:47:08Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "server-room",
+      "camera_id": "cam-4-side-05"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-4-side-05",
+      "frame_number": 16157
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T02:47:08.148000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-040830-4853",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T04:08:30Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "1",
+      "zone": "conference-room-b",
+      "camera_id": "cam-1-park-03"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-85880",
+        "attributes": {
+          "dwell_time_seconds": 552,
+          "trajectory": "static"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-1-park-03",
+      "confidence_score": 0.83,
+      "behavior_type": "loitering",
+      "duration_seconds": 552,
+      "threshold_seconds": 300
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T04:08:30.195000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260101-042449-8350",
+    "event_type": "access.tailgating",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-01T04:24:49Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "2",
+      "zone": "main-lobby",
+      "reader_id": "reader-2-main-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-main-01",
+      "door_id": "door-building-1-main-lobby"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T04:24:49.085000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260101-043944-2163",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-01T04:39:44Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "2",
+      "zone": "conference-room-b",
+      "reader_id": "reader-2-side-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0001",
+        "attributes": {
+          "badge_number": "badge-0001",
+          "name": "Employee 1",
+          "role": "maintenance"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-2-side-01",
+      "door_id": "door-building-5-conference-room-b",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0001"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T04:39:44.065000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-052004-6718",
+    "event_type": "ai.anomaly.tailgating",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T05:20:04Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "3",
+      "zone": "parking-garage",
+      "camera_id": "cam-5-cafe-04"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-cafe-04",
+      "confidence_score": 0.93
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T05:20:04.112000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260101-052340-5978",
+    "event_type": "intercom.emergency.pressed",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-01T05:23:40Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "2",
+      "zone": "parking-garage",
+      "device_id": "intercom-5-park-02"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-5-park-02",
+      "emergency_type": "panic_button",
+      "call_initiated_to": "security-dispatch",
+      "audio_recording_s3_uri": "s3://security-audio/2026/01/01/emergency-052340.wav"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T05:23:40.071000Z",
+      "tags": [
+        "emergency",
+        "panic-button",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-052757-8699",
+    "event_type": "video.detection.motion",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T05:27:57Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "hallway-south",
+      "camera_id": "cam-4-side-05"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-4-side-05",
+      "frame_number": 39175
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T05:27:57.058000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-065206-1887",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T06:52:06Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "server-room",
+      "camera_id": "cam-3-park-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-3-park-02",
+      "frame_number": 89259
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T06:52:06.075000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260101-080845-2290",
+    "event_type": "access.tailgating",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-01T08:08:45Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "1",
+      "zone": "main-lobby",
+      "reader_id": "reader-5-exec-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-5-exec-01",
+      "door_id": "door-building-2-main-lobby"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T08:08:45.071000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-082127-1977",
+    "event_type": "ai.anomaly.tailgating",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T08:21:27Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "3",
+      "zone": "parking-garage",
+      "camera_id": "cam-1-park-03"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-1-park-03",
+      "confidence_score": 0.78
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T08:21:27.128000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260101-082628-8569",
+    "event_type": "incident.updated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-01T08:26:28Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "hallway-north"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260101-082628",
+      "incident_type": "medical_emergency",
+      "priority": 2,
+      "status": "investigating",
+      "assigned_to": "SEC-004"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T08:26:28.063000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-091607-5930",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T09:16:07Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "2",
+      "zone": "conference-room-b",
+      "camera_id": "cam-4-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-4-main-01",
+      "frame_number": 54225
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T09:16:07.190000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-radio-20260101-093148-8508",
+    "event_type": "radio.emergency_alert",
+    "source_system": "radio-motorola",
+    "timestamp": "2026-01-01T09:31:48Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "side-entrance"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "SEC-001",
+        "attributes": {
+          "name": "Officer Rodriguez",
+          "badge": "001",
+          "unit": "patrol-01"
+        }
+      }
+    ],
+    "payload": {
+      "radio_id": "radio-001",
+      "officer_id": "SEC-001",
+      "channel": "emergency",
+      "message_transcript": "Code Red, Building 5 main entrance",
+      "audio_s3_uri": "s3://security-radio/2026/01/01/emergency-093148.mp3"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T09:31:48.194000Z",
+      "tags": [
+        "emergency",
+        "radio",
+        "officer-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-093724-8894",
+    "event_type": "ai.safety.no_ppe",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T09:37:24Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "3",
+      "zone": "parking-garage",
+      "camera_id": "cam-2-park-01"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-54396",
+        "attributes": {
+          "missing_ppe": "hard_hat"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-park-01",
+      "confidence_score": 0.94,
+      "ppe_type": "hard_hat"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T09:37:24.125000Z",
+      "tags": [
+        "safety-violation"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260101-130359-5786",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-01T13:03:59Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "2",
+      "zone": "executive-wing",
+      "reader_id": "reader-1-side-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0004",
+        "attributes": {
+          "badge_number": "badge-0004",
+          "name": "Employee 4",
+          "role": "employee"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-1-side-01",
+      "door_id": "door-building-5-executive-wing",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0004"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T13:03:59.082000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-131359-6355",
+    "event_type": "video.analytics.loitering",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T13:13:59Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "main-lobby",
+      "camera_id": "cam-3-park-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-65255",
+        "attributes": {
+          "dwell_time_seconds": 464,
+          "appearance_description": "Business suit"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-3-park-02",
+      "frame_number": 45236,
+      "behavior_type": "loitering",
+      "duration_seconds": 464,
+      "threshold_seconds": 300,
+      "confidence_score": 0.92
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T13:13:59.147000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-133933-1845",
+    "event_type": "ai.safety.no_ppe",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T13:39:33Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "4",
+      "zone": "hallway-north",
+      "camera_id": "cam-3-park-02"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-27172",
+        "attributes": {
+          "missing_ppe": "safety_vest"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-3-park-02",
+      "confidence_score": 0.79,
+      "ppe_type": "hard_hat"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T13:39:33.190000Z",
+      "tags": [
+        "safety-violation"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-153600-8749",
+    "event_type": "ai.anomaly.tailgating",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T15:36:00Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "4",
+      "zone": "main-lobby",
+      "camera_id": "cam-5-side-05"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-side-05",
+      "confidence_score": 0.91
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T15:36:00.098000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260101-154523-5853",
+    "event_type": "incident.updated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-01T15:45:23Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "side-entrance"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260101-154523",
+      "incident_type": "access_violation",
+      "priority": 3,
+      "status": "investigating",
+      "assigned_to": "SEC-002"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T15:45:23.142000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-164015-5562",
+    "event_type": "video.detection.motion",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T16:40:15Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "1",
+      "zone": "conference-room-a",
+      "camera_id": "cam-2-side-05"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-2-side-05",
+      "frame_number": 88684
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T16:40:15.174000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260101-165120-4241",
+    "event_type": "access.tailgating",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-01T16:51:20Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "1",
+      "zone": "hallway-north",
+      "reader_id": "reader-2-side-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-side-01",
+      "door_id": "door-building-4-hallway-north"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T16:51:20.158000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-180421-8381",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T18:04:21Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "2",
+      "zone": "conference-room-a",
+      "camera_id": "cam-3-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-3-main-01",
+      "frame_number": 59028
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T18:04:21.126000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260101-183932-2771",
+    "event_type": "incident.updated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-01T18:39:32Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "1",
+      "zone": "parking-garage"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260101-183932",
+      "incident_type": "equipment_malfunction",
+      "priority": 3,
+      "status": "investigating",
+      "assigned_to": "SEC-005"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T18:39:32.056000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-191526-5295",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T19:15:26Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "hallway-north",
+      "camera_id": "cam-4-cafe-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-98452",
+        "attributes": {
+          "dwell_time_seconds": 410,
+          "trajectory": "static"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-4-cafe-02",
+      "confidence_score": 0.87,
+      "behavior_type": "loitering",
+      "duration_seconds": 410,
+      "threshold_seconds": 300
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T19:15:26.145000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260101-192541-4269",
+    "event_type": "video.detection.person",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-01T19:25:41Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "1",
+      "zone": "loading-dock",
+      "camera_id": "cam-2-side-05"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-50001",
+        "attributes": {}
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-side-05",
+      "frame_number": 61332
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T19:25:41.139000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-ai-20260101-201839-9098",
+    "event_type": "ai.anomaly.tailgating",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-01T20:18:39Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "cafeteria",
+      "camera_id": "cam-1-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-1-main-01",
+      "confidence_score": 0.92
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T20:18:39.096000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260101-203544-9824",
+    "event_type": "incident.updated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-01T20:35:44Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "4",
+      "zone": "parking-garage"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260101-203544",
+      "incident_type": "armed_intruder",
+      "priority": 1,
+      "status": "investigating",
+      "assigned_to": "SEC-004"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-01T20:35:44.138000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260102-001227-4912",
+    "event_type": "intercom.emergency.pressed",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-02T00:12:27Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "cafeteria",
+      "device_id": "intercom-2-park-03"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-2-park-03",
+      "emergency_type": "panic_button",
+      "call_initiated_to": "security-dispatch",
+      "audio_recording_s3_uri": "s3://security-audio/2026/01/02/emergency-001227.wav"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T00:12:27.196000Z",
+      "tags": [
+        "emergency",
+        "panic-button",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-004834-2070",
+    "event_type": "video.detection.motion",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T00:48:34Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "side-entrance",
+      "camera_id": "cam-5-park-03"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-park-03",
+      "frame_number": 53521
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T00:48:34.175000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-025429-9666",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T02:54:29Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "conference-room-b",
+      "reader_id": "reader-5-side-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0042",
+        "attributes": {
+          "badge_number": "badge-0042",
+          "name": "Unknown",
+          "denial_reason": "badge_disabled"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-5-side-01",
+      "door_id": "door-building-4-conference-room-b",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0042",
+      "denial_reason": "badge_disabled"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T02:54:29.052000Z",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260102-031742-3950",
+    "event_type": "ai.anomaly.tailgating",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-02T03:17:42Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "conference-room-b",
+      "camera_id": "cam-4-main-05"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-4-main-05",
+      "confidence_score": 0.78
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T03:17:42.070000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-035313-7246",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T03:53:13Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "3",
+      "zone": "hallway-south",
+      "camera_id": "cam-3-main-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-3-main-02",
+      "frame_number": 51604
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T03:53:13.088000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-ai-20260102-040045-5847",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-02T04:00:45Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "conference-room-b",
+      "camera_id": "cam-2-cafe-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-96275",
+        "attributes": {
+          "dwell_time_seconds": 322,
+          "trajectory": "static"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-cafe-01",
+      "confidence_score": 0.95,
+      "behavior_type": "loitering",
+      "duration_seconds": 322,
+      "threshold_seconds": 300
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T04:00:45.125000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-044918-5689",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T04:49:18Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "conference-room-b",
+      "reader_id": "reader-4-cafe-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0032",
+        "attributes": {
+          "badge_number": "badge-0032",
+          "name": "Employee 32",
+          "role": "maintenance"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-4-cafe-01",
+      "door_id": "door-building-5-conference-room-b",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0032"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T04:49:18.108000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-054232-3522",
+    "event_type": "video.detection.weapon",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T05:42:32Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "4",
+      "zone": "side-entrance",
+      "camera_id": "cam-4-park-02"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-64459",
+        "attributes": {
+          "bounding_box": {
+            "x": 594,
+            "y": 341,
+            "w": 111,
+            "h": 316
+          }
+        }
+      },
+      {
+        "entity_type": "object",
+        "entity_id": "detected-weapon-664",
+        "attributes": {
+          "weapon_type": "unknown",
+          "confidence": 0.94,
+          "bounding_box": {
+            "x": 437,
+            "y": 349,
+            "w": 36,
+            "h": 59
+          }
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-4-park-02",
+      "frame_number": 66323,
+      "weapon_type": "unknown",
+      "confidence": 0.94,
+      "video_clip_s3_uri": "s3://security-clips/2026/01/02/cam-4-park-02-054232.mp4",
+      "snapshot_s3_uri": "s3://security-clips/2026/01/02/cam-4-park-02-054232-snapshot.jpg",
+      "ai_model_version": "weapon-detection-v2.3",
+      "detection_latency_ms": 136
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T05:42:32.124000Z",
+      "tags": [
+        "ai-detection",
+        "critical-threat",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-locker-20260102-055830-7561",
+    "event_type": "locker.weapon_returned",
+    "source_system": "weapon-locker-system",
+    "timestamp": "2026-01-02T05:58:30Z",
+    "location": {
+      "site": "campus-north",
+      "building": "security-office",
+      "floor": "1",
+      "zone": "armory",
+      "locker_id": "locker-09"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "SEC-003",
+        "attributes": {
+          "name": "Officer Smith",
+          "badge": "003"
+        }
+      }
+    ],
+    "payload": {
+      "locker_id": "locker-01",
+      "officer_id": "SEC-003",
+      "weapon_id": "firearm-021",
+      "weapon_type": "sig_p320",
+      "serial_number": "ABC364659",
+      "checkout_reason": "emergency_response"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T05:58:30.166000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-064313-2604",
+    "event_type": "video.analytics.loitering",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T06:43:13Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "2",
+      "zone": "side-entrance",
+      "camera_id": "cam-3-park-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-22224",
+        "attributes": {
+          "dwell_time_seconds": 195,
+          "appearance_description": "Red shirt, khakis"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-3-park-02",
+      "frame_number": 7630,
+      "behavior_type": "loitering",
+      "duration_seconds": 195,
+      "threshold_seconds": 300,
+      "confidence_score": 0.78
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T06:43:13.188000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-073405-5425",
+    "event_type": "access.forced_entry",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T07:34:05Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "parking-garage",
+      "reader_id": "reader-4-cafe-01"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-4-cafe-01",
+      "door_id": "door-building-2-parking-garage",
+      "alarm_triggered": true
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T07:34:05.187000Z",
+      "tags": [
+        "access-control",
+        "forced-entry",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-locker-20260102-075409-1472",
+    "event_type": "locker.weapon_returned",
+    "source_system": "weapon-locker-system",
+    "timestamp": "2026-01-02T07:54:09Z",
+    "location": {
+      "site": "campus-north",
+      "building": "security-office",
+      "floor": "1",
+      "zone": "armory",
+      "locker_id": "locker-10"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "SEC-001",
+        "attributes": {
+          "name": "Officer Rodriguez",
+          "badge": "001"
+        }
+      }
+    ],
+    "payload": {
+      "locker_id": "locker-04",
+      "officer_id": "SEC-001",
+      "weapon_id": "firearm-049",
+      "weapon_type": "remington_870",
+      "serial_number": "ABC114338",
+      "checkout_reason": "training"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T07:54:09.090000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-080559-7807",
+    "event_type": "video.analytics.crowd",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T08:05:59Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "1",
+      "zone": "executive-wing",
+      "camera_id": "cam-2-exec-04"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-2-exec-04",
+      "frame_number": 24021
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T08:05:59.101000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-092753-2210",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T09:27:53Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "hallway-north",
+      "reader_id": "reader-3-cafe-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0011",
+        "attributes": {
+          "badge_number": "badge-0011",
+          "name": "Employee 11",
+          "role": "contractor"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-3-cafe-01",
+      "door_id": "door-building-4-hallway-north",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0011"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T09:27:53.163000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-100610-2479",
+    "event_type": "video.detection.vehicle",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T10:06:10Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "conference-room-a",
+      "camera_id": "cam-2-cafe-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-2-cafe-01",
+      "frame_number": 52717
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T10:06:10.053000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-101448-1659",
+    "event_type": "video.detection.motion",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T10:14:48Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "2",
+      "zone": "hallway-north",
+      "camera_id": "cam-1-park-03"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-1-park-03",
+      "frame_number": 99858
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T10:14:48.057000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-ai-20260102-112147-1035",
+    "event_type": "ai.anomaly.tailgating",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-02T11:21:47Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "1",
+      "zone": "parking-garage",
+      "camera_id": "cam-3-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-3-main-01",
+      "confidence_score": 0.95
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T11:21:47.117000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-113008-5526",
+    "event_type": "video.analytics.crowd",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T11:30:08Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "camera_id": "cam-5-exec-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-exec-02",
+      "frame_number": 73848
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T11:30:08.052000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-120407-8213",
+    "event_type": "video.detection.vehicle",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T12:04:07Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "3",
+      "zone": "side-entrance",
+      "camera_id": "cam-5-main-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-main-01",
+      "frame_number": 14069
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T12:04:07.184000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-125805-3646",
+    "event_type": "video.analytics.loitering",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T12:58:05Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "2",
+      "zone": "parking-garage",
+      "camera_id": "cam-2-cafe-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-88504",
+        "attributes": {
+          "dwell_time_seconds": 180,
+          "appearance_description": "Business suit"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-cafe-01",
+      "frame_number": 71697,
+      "behavior_type": "loitering",
+      "duration_seconds": 180,
+      "threshold_seconds": 300,
+      "confidence_score": 0.85
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T12:58:05.185000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-incident-20260102-130032-9318",
+    "event_type": "incident.created",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-02T13:00:32Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "3",
+      "zone": "server-room"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260102-130032",
+      "incident_type": "equipment_malfunction",
+      "priority": 3,
+      "status": "active",
+      "assigned_to": "SEC-003"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T13:00:32.050000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-133710-4937",
+    "event_type": "video.detection.person",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T13:37:10Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "loading-dock",
+      "camera_id": "cam-3-cafe-05"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-94659",
+        "attributes": {}
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-3-cafe-05",
+      "frame_number": 91519
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T13:37:10.171000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-ai-20260102-140508-5001",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-02T14:05:08Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance",
+      "camera_id": "cam-5-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-67890",
+        "attributes": {
+          "dwell_time_seconds": 420,
+          "trajectory": "static",
+          "appearance_description": "Black jacket, jeans"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-5-main-01",
+      "behavior_type": "loitering",
+      "duration_seconds": 420,
+      "threshold_seconds": 300,
+      "confidence_score": 0.89
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:08.120000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-140528-5002",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T14:05:28Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance",
+      "reader_id": "reader-5-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-9999",
+        "attributes": {
+          "badge_number": "badge-9999",
+          "name": "Unknown",
+          "denial_reason": "Badge expired"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-5-main-01",
+      "door_id": "door-building-5-main-entrance",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-9999",
+      "denial_reason": "credential_expired",
+      "expiration_date": "2025-12-15"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:28.100000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-acoustic-20260102-140529-5003",
+    "event_type": "acoustic.gunshot.detected",
+    "source_system": "acoustic-shotspotter",
+    "timestamp": "2026-01-02T14:05:29.500000Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance",
+      "sensor_ids": [
+        "sensor-101",
+        "sensor-102",
+        "sensor-103"
+      ],
+      "triangulated_position": {
+        "x": 45.2,
+        "y": 12.8
+      }
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "detection_confidence": 0.96,
+      "number_of_shots": 1,
+      "audio_signature": "single_gunshot",
+      "weapon_type_estimate": "handgun",
+      "sensors_triggered": [
+        "sensor-101",
+        "sensor-102",
+        "sensor-103"
+      ],
+      "triangulation_accuracy_meters": 2.5,
+      "audio_clip_s3_uri": "s3://security-audio/2026/01/02/gunshot-140529.wav"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:29.580000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "gunshot",
+        "emergency",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-140530-5004",
+    "event_type": "video.detection.weapon",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T14:05:30Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance",
+      "camera_id": "cam-5-main-01"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-67890",
+        "attributes": {
+          "bounding_box": {
+            "x": 450,
+            "y": 200,
+            "w": 120,
+            "h": 280
+          },
+          "confidence": 0.94
+        }
+      },
+      {
+        "entity_type": "object",
+        "entity_id": "detected-weapon-001",
+        "attributes": {
+          "weapon_type": "firearm",
+          "confidence": 0.97,
+          "bounding_box": {
+            "x": 480,
+            "y": 320,
+            "w": 40,
+            "h": 35
+          }
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-5-main-01",
+      "frame_number": 10234,
+      "weapon_type": "firearm",
+      "confidence": 0.94,
+      "video_clip_s3_uri": "s3://security-clips/2026/01/02/cam-5-main-01-140530.mp4",
+      "snapshot_s3_uri": "s3://security-clips/2026/01/02/cam-5-main-01-140530-snapshot.jpg",
+      "ai_model_version": "weapon-detection-v2.3",
+      "detection_latency_ms": 85
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:30.200000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "ai-detection",
+        "critical-threat",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260102-140532-5005",
+    "event_type": "intercom.emergency.pressed",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-02T14:05:32Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance",
+      "device_id": "intercom-5-main-01"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-5-main-01",
+      "emergency_type": "panic_button",
+      "call_initiated_to": "security-dispatch",
+      "audio_recording_s3_uri": "s3://security-audio/2026/01/02/emergency-140532.wav"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:32.150000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "emergency",
+        "panic-button",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-radio-20260102-140533-5006",
+    "event_type": "radio.emergency_alert",
+    "source_system": "radio-motorola",
+    "timestamp": "2026-01-02T14:05:33Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "SEC-001",
+        "attributes": {
+          "name": "Officer Rodriguez",
+          "badge": "001",
+          "unit": "patrol-01"
+        }
+      }
+    ],
+    "payload": {
+      "radio_id": "radio-001",
+      "officer_id": "SEC-001",
+      "channel": "emergency",
+      "message_transcript": "Code Red, building-5 main entrance, weapon detected",
+      "audio_s3_uri": "s3://security-radio/2026/01/02/emergency-140533.mp3",
+      "gps_location": {
+        "lat": 29.4241,
+        "lng": -98.4936
+      }
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:33.180000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "emergency",
+        "radio",
+        "officer-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-locker-20260102-140534-5007",
+    "event_type": "locker.weapon_removed",
+    "source_system": "weapon-locker-system",
+    "timestamp": "2026-01-02T14:05:34Z",
+    "location": {
+      "site": "campus-north",
+      "building": "security-office",
+      "floor": "1",
+      "zone": "armory",
+      "locker_id": "locker-03"
+    },
+    "severity": "HIGH",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "SEC-002",
+        "attributes": {
+          "name": "Officer Chen",
+          "badge": "002"
+        }
+      }
+    ],
+    "payload": {
+      "locker_id": "locker-03",
+      "weapon_id": "firearm-023",
+      "weapon_type": "glock_19",
+      "serial_number": "ABC123456",
+      "officer_id": "SEC-002",
+      "checkout_reason": "emergency_response",
+      "authorization_level": "supervisor_approved"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:34.100000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "weapon-checkout",
+        "emergency-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-incident-20260102-140535-5008",
+    "event_type": "incident.created",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-02T14:05:35Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "main-entrance"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "incident_id": "incident-2026-001",
+      "incident_type": "armed_intruder",
+      "description": "Weapon detected at main entrance, multiple correlated events",
+      "assigned_to": "security-team-alpha",
+      "priority": 1,
+      "status": "active",
+      "correlated_events": [
+        "evt-ai-20260102-140508-5001",
+        "evt-access-20260102-140528-5002",
+        "evt-acoustic-20260102-140529-5003",
+        "evt-camera-20260102-140530-5004",
+        "evt-intercom-20260102-140532-5005",
+        "evt-radio-20260102-140533-5006",
+        "evt-locker-20260102-140534-5007"
+      ],
+      "response_plan": "armed-intruder-protocol-001"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T14:05:35.100000Z",
+      "correlation_id": "incident-2026-001",
+      "tags": [
+        "incident",
+        "armed-intruder",
+        "coordinated-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-152853-9238",
+    "event_type": "video.analytics.crowd",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T15:28:53Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "1",
+      "zone": "conference-room-b",
+      "camera_id": "cam-3-main-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-3-main-02",
+      "frame_number": 70615
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T15:28:53.090000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-163520-6198",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T16:35:20Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "2",
+      "zone": "loading-dock",
+      "reader_id": "reader-4-main-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0034",
+        "attributes": {
+          "badge_number": "badge-0034",
+          "name": "Employee 34",
+          "role": "employee"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-4-main-01",
+      "door_id": "door-building-4-loading-dock",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0034"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T16:35:20.163000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-175739-8141",
+    "event_type": "video.detection.vehicle",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T17:57:39Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "executive-wing",
+      "camera_id": "cam-1-cafe-02"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-1-cafe-02",
+      "frame_number": 84202
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T17:57:39.175000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260102-182501-6974",
+    "event_type": "intercom.call.initiated",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-02T18:25:01Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "2",
+      "zone": "main-entrance",
+      "device_id": "intercom-3-side-01"
+    },
+    "severity": "INFO",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-3-side-01"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T18:25:01.060000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-191729-6147",
+    "event_type": "video.detection.person",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T19:17:29Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "executive-wing",
+      "camera_id": "cam-2-main-01"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-61876",
+        "attributes": {}
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-main-01",
+      "frame_number": 32285
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T19:17:29.117000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260102-191947-5982",
+    "event_type": "incident.escalated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-02T19:19:47Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "side-entrance"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260102-191947",
+      "incident_type": "armed_intruder",
+      "priority": 1,
+      "status": "investigating",
+      "assigned_to": "SEC-006"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T19:19:47.153000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260102-200232-5114",
+    "event_type": "video.analytics.crowd",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-02T20:02:32Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "3",
+      "zone": "conference-room-a",
+      "camera_id": "cam-3-main-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-3-main-02",
+      "frame_number": 7658
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T20:02:32.073000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-201218-3240",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T20:12:18Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "3",
+      "zone": "hallway-north",
+      "reader_id": "reader-5-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0047",
+        "attributes": {
+          "badge_number": "badge-0047",
+          "name": "Employee 47",
+          "denial_reason": "credential_expired"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-5-main-01",
+      "door_id": "door-building-2-hallway-north",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0047",
+      "denial_reason": "credential_expired"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T20:12:18.074000Z",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-202254-8555",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T20:22:54Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "conference-room-b",
+      "reader_id": "reader-1-exec-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-1-exec-01",
+      "door_id": "door-building-2-conference-room-b"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T20:22:54.115000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-incident-20260102-203643-8777",
+    "event_type": "incident.escalated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-02T20:36:43Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "parking-garage"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260102-203643",
+      "incident_type": "fire_alarm",
+      "priority": 2,
+      "status": "investigating",
+      "assigned_to": "SEC-004"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T20:36:43.116000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260102-215129-3417",
+    "event_type": "intercom.call.initiated",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-02T21:51:29Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "server-room",
+      "device_id": "intercom-2-main-03"
+    },
+    "severity": "INFO",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-2-main-03"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T21:51:29.051000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260102-221113-5291",
+    "event_type": "access.tailgating",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-02T22:11:13Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "1",
+      "zone": "cafeteria",
+      "reader_id": "reader-5-main-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-5-main-01",
+      "door_id": "door-building-1-cafeteria"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T22:11:13.091000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-incident-20260102-222653-8690",
+    "event_type": "incident.updated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-02T22:26:53Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "1",
+      "zone": "conference-room-b"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260102-222653",
+      "incident_type": "equipment_malfunction",
+      "priority": 3,
+      "status": "investigating",
+      "assigned_to": "SEC-004"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-02T22:26:53.162000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-001013-9031",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T00:10:13Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "3",
+      "zone": "main-entrance",
+      "reader_id": "reader-5-main-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0027",
+        "attributes": {
+          "badge_number": "badge-0027",
+          "name": "Employee 27",
+          "role": "maintenance"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-5-main-01",
+      "door_id": "door-building-5-main-entrance",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0027"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T00:10:13.077000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-001823-3546",
+    "event_type": "video.detection.vehicle",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T00:18:23Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "1",
+      "zone": "side-entrance",
+      "camera_id": "cam-4-cafe-02"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-4-cafe-02",
+      "frame_number": 36697
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T00:18:23.122000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260103-002053-6419",
+    "event_type": "intercom.call.answered",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-03T00:20:53Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "server-room",
+      "device_id": "intercom-5-side-02"
+    },
+    "severity": "INFO",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-5-side-02"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T00:20:53.140000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-005929-8784",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T00:59:29Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "2",
+      "zone": "main-entrance",
+      "reader_id": "reader-1-side-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0016",
+        "attributes": {
+          "badge_number": "badge-0016",
+          "name": "Employee 16",
+          "denial_reason": "access_level_insufficient"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-1-side-01",
+      "door_id": "door-building-2-main-entrance",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0016",
+      "denial_reason": "access_level_insufficient"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T00:59:29.068000Z",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-013826-3591",
+    "event_type": "ai.safety.no_ppe",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T01:38:26Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "1",
+      "zone": "executive-wing",
+      "camera_id": "cam-3-side-01"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-75612",
+        "attributes": {
+          "missing_ppe": "hard_hat"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-3-side-01",
+      "confidence_score": 0.84,
+      "ppe_type": "hard_hat"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T01:38:26.117000Z",
+      "tags": [
+        "safety-violation"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-022628-8994",
+    "event_type": "access.granted",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T02:26:28Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "cafeteria",
+      "reader_id": "reader-4-park-01"
+    },
+    "severity": "INFO",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0046",
+        "attributes": {
+          "badge_number": "badge-0046",
+          "name": "Employee 46",
+          "role": "maintenance"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-4-park-01",
+      "door_id": "door-building-3-cafeteria",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0046"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T02:26:28.188000Z",
+      "tags": [
+        "access-control",
+        "authorized-access"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-023154-9890",
+    "event_type": "video.detection.weapon",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T02:31:54Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "4",
+      "zone": "server-room",
+      "camera_id": "cam-2-exec-04"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-65069",
+        "attributes": {
+          "bounding_box": {
+            "x": 498,
+            "y": 494,
+            "w": 82,
+            "h": 347
+          }
+        }
+      },
+      {
+        "entity_type": "object",
+        "entity_id": "detected-weapon-489",
+        "attributes": {
+          "weapon_type": "firearm",
+          "confidence": 0.88,
+          "bounding_box": {
+            "x": 522,
+            "y": 300,
+            "w": 60,
+            "h": 41
+          }
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-exec-04",
+      "frame_number": 62069,
+      "weapon_type": "firearm",
+      "confidence": 0.88,
+      "video_clip_s3_uri": "s3://security-clips/2026/01/03/cam-2-exec-04-023154.mp4",
+      "snapshot_s3_uri": "s3://security-clips/2026/01/03/cam-2-exec-04-023154-snapshot.jpg",
+      "ai_model_version": "weapon-detection-v2.3",
+      "detection_latency_ms": 98
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T02:31:54.156000Z",
+      "tags": [
+        "ai-detection",
+        "critical-threat",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-incident-20260103-024604-6688",
+    "event_type": "incident.updated",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-03T02:46:04Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "conference-room-b"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260103-024604",
+      "incident_type": "suspicious_activity",
+      "priority": 3,
+      "status": "investigating",
+      "assigned_to": "SEC-005"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T02:46:04.159000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-031000-6001",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T03:10:00Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "reader_id": "reader-3-exec-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-8888",
+        "attributes": {
+          "badge_number": "badge-8888",
+          "name": "Unknown",
+          "denial_reason": "Access level insufficient"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-3-exec-01",
+      "door_id": "door-building-3-executive-wing",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-8888",
+      "denial_reason": "access_level_insufficient"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:10:00.100000Z",
+      "correlation_id": "incident-2026-002",
+      "tags": [
+        "access-control",
+        "denied-entry",
+        "repeated-attempts"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-031049-4155",
+    "event_type": "ai.safety.no_ppe",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T03:10:49Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "main-lobby",
+      "camera_id": "cam-1-main-02"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-34267",
+        "attributes": {
+          "missing_ppe": "hard_hat"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-1-main-02",
+      "confidence_score": 0.81,
+      "ppe_type": "hard_hat"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:10:49.187000Z",
+      "tags": [
+        "safety-violation"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-031200-6002",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T03:12:00Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "reader_id": "reader-3-exec-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-8888",
+        "attributes": {
+          "badge_number": "badge-8888",
+          "name": "Unknown",
+          "denial_reason": "Access level insufficient"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-3-exec-02",
+      "door_id": "door-building-3-executive-wing",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-8888",
+      "denial_reason": "access_level_insufficient"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:12:00.100000Z",
+      "correlation_id": "incident-2026-002",
+      "tags": [
+        "access-control",
+        "denied-entry",
+        "repeated-attempts"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-031400-6003",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T03:14:00Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "reader_id": "reader-3-exec-03"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-8888",
+        "attributes": {
+          "badge_number": "badge-8888",
+          "name": "Unknown",
+          "denial_reason": "Access level insufficient"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-3-exec-03",
+      "door_id": "door-building-3-executive-wing",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-8888",
+      "denial_reason": "access_level_insufficient"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:14:00.100000Z",
+      "correlation_id": "incident-2026-002",
+      "tags": [
+        "access-control",
+        "denied-entry",
+        "repeated-attempts"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-031500-6004",
+    "event_type": "access.forced_entry",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T03:15:00Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "reader_id": "reader-3-exec-03"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-3-exec-03",
+      "door_id": "door-building-3-executive-wing",
+      "alarm_triggered": true
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:15:00.150000Z",
+      "correlation_id": "incident-2026-002",
+      "tags": [
+        "forced-entry",
+        "immediate-response",
+        "alarm"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-031510-6005",
+    "event_type": "video.detection.person",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T03:15:10Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "executive-wing",
+      "camera_id": "cam-3-exec-02"
+    },
+    "severity": "HIGH",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-88888",
+        "attributes": {}
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-3-exec-02",
+      "frame_number": 45678
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:15:10.120000Z",
+      "correlation_id": "incident-2026-002",
+      "tags": [
+        "unauthorized-access",
+        "restricted-area"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-035005-7625",
+    "event_type": "ai.safety.restricted_area",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T03:50:05Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "1",
+      "zone": "executive-wing",
+      "camera_id": "cam-2-side-05"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-2-side-05",
+      "confidence_score": 0.89
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:50:05.128000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-035731-2320",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T03:57:31Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "3",
+      "zone": "cafeteria",
+      "reader_id": "reader-5-exec-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0035",
+        "attributes": {
+          "badge_number": "badge-0035",
+          "name": "Unknown",
+          "denial_reason": "badge_not_authorized"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-5-exec-01",
+      "door_id": "door-building-3-cafeteria",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0035",
+      "denial_reason": "badge_not_authorized"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T03:57:31.085000Z",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-042439-5844",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T04:24:39Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "cafeteria",
+      "reader_id": "reader-3-main-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-3-main-01",
+      "door_id": "door-building-3-cafeteria"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T04:24:39.191000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-051745-8787",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T05:17:45Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "2",
+      "zone": "parking-garage",
+      "camera_id": "cam-4-main-05"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-79163",
+        "attributes": {
+          "dwell_time_seconds": 571,
+          "trajectory": "static"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-4-main-05",
+      "confidence_score": 0.94,
+      "behavior_type": "loitering",
+      "duration_seconds": 571,
+      "threshold_seconds": 300
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T05:17:45.092000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-052913-1339",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T05:29:13Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "1",
+      "zone": "side-entrance",
+      "reader_id": "reader-2-side-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-side-01",
+      "door_id": "door-building-3-side-entrance"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T05:29:13.118000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-055829-3442",
+    "event_type": "ai.threat.aggressive_behavior",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T05:58:29Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "1",
+      "zone": "side-entrance",
+      "camera_id": "cam-1-park-03"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-1-park-03",
+      "confidence_score": 0.86
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T05:58:29.144000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-064433-8206",
+    "event_type": "access.tailgating",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T06:44:33Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "4",
+      "zone": "hallway-north",
+      "reader_id": "reader-2-side-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-side-01",
+      "door_id": "door-building-5-hallway-north"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T06:44:33.069000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-065158-8140",
+    "event_type": "access.forced_entry",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T06:51:58Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "2",
+      "zone": "loading-dock",
+      "reader_id": "reader-2-side-01"
+    },
+    "severity": "CRITICAL",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-side-01",
+      "door_id": "door-building-5-loading-dock",
+      "alarm_triggered": true
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T06:51:58.174000Z",
+      "tags": [
+        "access-control",
+        "forced-entry",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-082427-5022",
+    "event_type": "ai.safety.restricted_area",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T08:24:27Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "3",
+      "zone": "cafeteria",
+      "camera_id": "cam-5-main-01"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-main-01",
+      "confidence_score": 0.92
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T08:24:27.072000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260103-094752-6491",
+    "event_type": "incident.created",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-03T09:47:52Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "3",
+      "zone": "conference-room-a"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260103-094752",
+      "incident_type": "fire_alarm",
+      "priority": 2,
+      "status": "active",
+      "assigned_to": "SEC-001"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T09:47:52.110000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-114458-5564",
+    "event_type": "video.detection.weapon",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T11:44:58Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "2",
+      "zone": "server-room",
+      "camera_id": "cam-2-exec-04"
+    },
+    "severity": "CRITICAL",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-62386",
+        "attributes": {
+          "bounding_box": {
+            "x": 795,
+            "y": 374,
+            "w": 122,
+            "h": 207
+          }
+        }
+      },
+      {
+        "entity_type": "object",
+        "entity_id": "detected-weapon-218",
+        "attributes": {
+          "weapon_type": "knife",
+          "confidence": 0.93,
+          "bounding_box": {
+            "x": 466,
+            "y": 322,
+            "w": 48,
+            "h": 60
+          }
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-exec-04",
+      "frame_number": 10099,
+      "weapon_type": "knife",
+      "confidence": 0.93,
+      "video_clip_s3_uri": "s3://security-clips/2026/01/03/cam-2-exec-04-114458.mp4",
+      "snapshot_s3_uri": "s3://security-clips/2026/01/03/cam-2-exec-04-114458-snapshot.jpg",
+      "ai_model_version": "weapon-detection-v2.3",
+      "detection_latency_ms": 93
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T11:44:58.121000Z",
+      "tags": [
+        "ai-detection",
+        "critical-threat",
+        "immediate-response"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-124236-6279",
+    "event_type": "video.analytics.loitering",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T12:42:36Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "2",
+      "zone": "server-room",
+      "camera_id": "cam-5-side-05"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-98555",
+        "attributes": {
+          "dwell_time_seconds": 632,
+          "appearance_description": "Red shirt, khakis"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-5-side-05",
+      "frame_number": 61946,
+      "behavior_type": "loitering",
+      "duration_seconds": 632,
+      "threshold_seconds": 300,
+      "confidence_score": 0.85
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T12:42:36.163000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-acoustic-20260103-143807-4457",
+    "event_type": "acoustic.alarm",
+    "source_system": "acoustic-shotspotter",
+    "timestamp": "2026-01-03T14:38:07Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "1",
+      "zone": "conference-room-b",
+      "sensor_ids": [
+        "sensor-204",
+        "sensor-954",
+        "sensor-718",
+        "sensor-975"
+      ],
+      "triangulated_position": {
+        "x": 33.8,
+        "y": 17.3
+      }
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "sensors_triggered": [
+        "sensor-204",
+        "sensor-954",
+        "sensor-718",
+        "sensor-975"
+      ],
+      "triangulation_accuracy_meters": 2.0
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T14:38:07.191000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-acoustic-20260103-153143-7118",
+    "event_type": "acoustic.alarm",
+    "source_system": "acoustic-shotspotter",
+    "timestamp": "2026-01-03T15:31:43Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "2",
+      "zone": "hallway-south",
+      "sensor_ids": [
+        "sensor-949",
+        "sensor-987",
+        "sensor-338"
+      ],
+      "triangulated_position": {
+        "x": 49.4,
+        "y": 56.6
+      }
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "sensors_triggered": [
+        "sensor-949",
+        "sensor-987",
+        "sensor-338"
+      ],
+      "triangulation_accuracy_meters": 1.5
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T15:31:43.107000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-incident-20260103-170005-9486",
+    "event_type": "incident.created",
+    "source_system": "incident-mgmt-system",
+    "timestamp": "2026-01-03T17:00:05Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "2",
+      "zone": "parking-garage"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "incident_id": "INC-20260103-170005",
+      "incident_type": "fire_alarm",
+      "priority": 2,
+      "status": "active",
+      "assigned_to": "SEC-004"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T17:00:05.062000Z",
+      "tags": [
+        "incident"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-172727-7658",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T17:27:27Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "1",
+      "zone": "cafeteria",
+      "reader_id": "reader-5-main-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0036",
+        "attributes": {
+          "badge_number": "badge-0036",
+          "name": "Employee 36",
+          "denial_reason": "badge_not_authorized"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-5-main-01",
+      "door_id": "door-building-2-cafeteria",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0036",
+      "denial_reason": "badge_not_authorized"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T17:27:27.089000Z",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-intercom-20260103-172959-1027",
+    "event_type": "intercom.call.initiated",
+    "source_system": "intercom-aiphone",
+    "timestamp": "2026-01-03T17:29:59Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "1",
+      "zone": "hallway-south",
+      "device_id": "intercom-4-side-03"
+    },
+    "severity": "INFO",
+    "entities": [],
+    "payload": {
+      "device_id": "intercom-4-side-03"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T17:29:59.183000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-180225-3223",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T18:02:25Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "1",
+      "zone": "side-entrance",
+      "reader_id": "reader-4-park-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-4-park-01",
+      "door_id": "door-building-5-side-entrance"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T18:02:25.168000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-181746-2225",
+    "event_type": "ai.anomaly.loitering",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T18:17:46Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "4",
+      "zone": "hallway-north",
+      "camera_id": "cam-1-exec-02"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-91691",
+        "attributes": {
+          "dwell_time_seconds": 646,
+          "trajectory": "static"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-1-exec-02",
+      "confidence_score": 0.84,
+      "behavior_type": "loitering",
+      "duration_seconds": 646,
+      "threshold_seconds": 300
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T18:17:46.117000Z",
+      "tags": [
+        "behavioral-anomaly"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-192353-6409",
+    "event_type": "ai.threat.suspicious_package",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T19:23:53Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-2",
+      "floor": "3",
+      "zone": "server-room",
+      "camera_id": "cam-1-park-03"
+    },
+    "severity": "HIGH",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-1-park-03",
+      "confidence_score": 0.87
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T19:23:53.081000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-ai-20260103-192801-5861",
+    "event_type": "ai.safety.no_ppe",
+    "source_system": "ai-analytics-engine",
+    "timestamp": "2026-01-03T19:28:01Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "parking-garage",
+      "camera_id": "cam-2-main-01"
+    },
+    "severity": "LOW",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "tracked-person-85914",
+        "attributes": {
+          "missing_ppe": "safety_glasses"
+        }
+      }
+    ],
+    "payload": {
+      "camera_id": "cam-2-main-01",
+      "confidence_score": 0.79,
+      "ppe_type": "hard_hat"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T19:28:01.064000Z",
+      "tags": [
+        "safety-violation"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-193822-4978",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T19:38:22Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-4",
+      "floor": "4",
+      "zone": "hallway-south",
+      "reader_id": "reader-2-main-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-main-01",
+      "door_id": "door-building-4-hallway-south"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T19:38:22.076000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-203836-1653",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T20:38:36Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-5",
+      "floor": "4",
+      "zone": "loading-dock",
+      "reader_id": "reader-1-park-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-1-park-01",
+      "door_id": "door-building-5-loading-dock"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T20:38:36.160000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-204947-5949",
+    "event_type": "access.door_held_open",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T20:49:47Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "hallway-south",
+      "reader_id": "reader-2-park-01"
+    },
+    "severity": "LOW",
+    "entities": [],
+    "payload": {
+      "reader_id": "reader-2-park-01",
+      "door_id": "door-building-3-hallway-south"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T20:49:47.100000Z",
+      "tags": [
+        "access-control"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-access-20260103-210855-2874",
+    "event_type": "access.denied",
+    "source_system": "access-control-lenel",
+    "timestamp": "2026-01-03T21:08:55Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "2",
+      "zone": "main-lobby",
+      "reader_id": "reader-1-exec-01"
+    },
+    "severity": "MEDIUM",
+    "entities": [
+      {
+        "entity_type": "person",
+        "entity_id": "badge-0031",
+        "attributes": {
+          "badge_number": "badge-0031",
+          "name": "Employee 31",
+          "denial_reason": "badge_not_authorized"
+        }
+      }
+    ],
+    "payload": {
+      "reader_id": "reader-1-exec-01",
+      "door_id": "door-building-1-main-lobby",
+      "credential_type": "proximity_card",
+      "credential_id": "badge-0031",
+      "denial_reason": "badge_not_authorized"
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T21:08:55.194000Z",
+      "tags": [
+        "access-control",
+        "denied-entry"
+      ]
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-223352-2713",
+    "event_type": "video.recording.clip_created",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T22:33:52Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-3",
+      "floor": "4",
+      "zone": "cafeteria",
+      "camera_id": "cam-2-exec-04"
+    },
+    "severity": "INFO",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-2-exec-04",
+      "frame_number": 22079
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T22:33:52.134000Z",
+      "tags": []
+    }
+  },
+  {
+    "event_id": "evt-camera-20260103-230506-6442",
+    "event_type": "video.system.camera_offline",
+    "source_system": "vms-milestone",
+    "timestamp": "2026-01-03T23:05:06Z",
+    "location": {
+      "site": "campus-north",
+      "building": "building-1",
+      "floor": "2",
+      "zone": "hallway-south",
+      "camera_id": "cam-5-cafe-04"
+    },
+    "severity": "MEDIUM",
+    "entities": [],
+    "payload": {
+      "camera_id": "cam-5-cafe-04",
+      "frame_number": 54964
+    },
+    "metadata": {
+      "ingestion_time": "2026-01-03T23:05:06.113000Z",
+      "tags": []
+    }
+  }
+]
