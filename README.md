@@ -23,10 +23,10 @@ TBA (a visual representation of how the agents are structured)
 
 ## Google Vertex
 
-The reason we want to use Google Vertex as opposed to Gemini API Key is because of the tool argument handling. The issue is with how you're using `functiontool.New()`. This is a known compatibility issue between the ADK's automatic schema generation and certain Gemini AP variants.
+The reason we want to use Google Vertex as opposed to Gemini API Key is because of the tool argument handling. The issue is with how we're using `functiontool.New()`. This is a known compatibility issue between the ADK's automatic schema generation and certain Gemini AP variants.
 
 The `functiontool.New()` helper uses reflection to automatically generate a genai.Schema from your Go structs (`WeatherArgs` and `WeatherResult`). Depending on how it generates the schema,
-it might be using ParametersJsonSchema or other fields that aren't supported by Gemini API (even though they work on Vertex AI).
+it might be using `ParametersJsonSchema` or other fields that aren't supported by Gemini API (even though they work on Vertex AI).
 
 From the ADK code at `tool/functiontool/functiontool.go`, the automatic schema generation can create schemas that are incompatible with Gemini API's function calling.
 
@@ -49,7 +49,7 @@ This opens a browser for you to log in with your Google account
   gcloud auth application-default login
 ```
 
-This creates credentials at ~/.config/gcloud/application_default_credentials.json that the
+This creates credentials at `~/.config/gcloud/application_default_credentials.json` that the
 ADK will automatically use.
 
 **Step 3**: Set Your Google Cloud Project
@@ -138,7 +138,7 @@ The server listens on port `8081` (default).
 
 ## Interactive Testing
 
-Start the test script to send multiple events to the AI layer over its API Endpoint:
+Start the test script to send multiple events to the AI layer over its API Endpoint and see the response:
 
 ```bash
 cd scripts
