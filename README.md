@@ -8,7 +8,7 @@ The application is built as a Go web server that orchestrates a team of speciali
 
 ![Macro Architecture](./media/macro-architecture.png)
 
-The Orchestrator agent launches 3 parallel agents: Triage, Correlation and Runbooks to operate on the incoming seurity events. The Response agent uses the output of the parallel agents to produce immediate, sort-term and long term actions in addition to notifications. 
+The Orchestrator agent launches 3 parallel agents: Triage, Correlation and Runbooks to operate on the incoming seurity events. The Response agent uses the output of the parallel agents to produce immediate, short-term and long term actions in addition to notifications. 
 
 ### Technical Stack
 
