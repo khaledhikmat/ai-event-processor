@@ -147,6 +147,33 @@ cd scripts
 go run test-events.go
 ```
 
+### Event Input Pattern
+
+**Note:** The current implementation follows a two-step pattern for sending events:
+
+1. **Create/Update Session with State**: Event JSON is stored in session state via the session creation endpoint
+2. **Run Agent**: Agent accesses the event via `{event_data}` template variable
+
+This is due to a **known ADK limitation**: The `stateDelta` field in the `/api/run` REST API endpoint is defined but not actually processed by the runtime controller (as of the current ADK version).
+
+**Current Workaround** (see `scripts/test-events.go`):
+```go
+// Create session with event data in initial state
+sessionPayload := map[string]interface{}{
+    "state": map[string]interface{}{
+        "event_data": string(eventJSON),
+    },
+}
+// POST to /api/apps/{appName}/users/{userId}/sessions/{sessionId}
+
+// Then run the agent
+// POST to /api/run
+```
+
+**Future Improvement**: Once ADK implements `stateDelta` processing, we can simplify to a single API call with the event payload included directly in the request.
+
+**Reference**: See `ADK-GO-DEEP-DIVE.md` lines 5232-5309 for detailed documentation of this limitation.
+
 ## Unit Testing
 
 Run the Go unit tests for all packages:
