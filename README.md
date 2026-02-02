@@ -1,6 +1,6 @@
 # AI Event Processor
 
-The AI Event Processor is a multi-agent Event-Driven Agentic Workflow designed to assist with trianing, correlation and classifying. It leverages Google's **Agent Development Kit (ADK)** and **Gemini** models to provide expert advice on real-time event processing.
+The AI Event Processor is a multi-agent Event-Driven Agentic Workflow designed to assist with processing security events. It leverages Google's **Agent Development Kit (ADK)** and **Gemini** models to provide expert advice on real-time event processing. This repo is inspired from this [ADK Go Sample](https://github.com/google/adk-samples/tree/main/go/agents/sail-researcher).
 
 ## Architecture
 
@@ -13,7 +13,6 @@ TBA (a visual representation of how the agents are structured)
 *   **Language**: Go (1.23+)
 *   **Framework**: [Google Agent Development Kit (ADK)](https://github.com/googleapis/agent-development-kit)
 *   **AI Model**: Google Gemini (via Vertex AI or AI Studio).
-*   **APIs**: Google Maps (Places), NOAA/OpenMeteo (Weather/Tides).
 *   **Observability**: Structured JSON logging (`log/slog`) and Google Cloud Trace integration.
 
 ## Prerequisites
