@@ -6,7 +6,9 @@ The AI Event Processor is a multi-agent Event-Driven Agentic Workflow designed t
 
 The application is built as a Go web server that orchestrates a team of specialized AI agents:
 
-TBA (a visual representation of how the agents are structured)
+![Macro Architecture](./media/macro-architecture.png)
+
+The Orchestrator agent launches 3 parallel agents: Triage, Correlation and Runbooks to operate on the incoming seurity events. The Response agent uses the output of the parallel agents to produce immediate, sort-term and long term actions in addition to notifications. 
 
 ### Technical Stack
 
