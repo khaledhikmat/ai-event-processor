@@ -47,14 +47,108 @@ type MessagePart struct {
 	Text string `json:"text"`
 }
 
+type PerformanceMetrics struct {
+	SessionDeletionDurations []time.Duration
+	SessionCreationDurations []time.Duration
+	AgentExecutionDurations  []time.Duration
+}
+
+func (pm *PerformanceMetrics) AddSessionDeletion(d time.Duration) {
+	pm.SessionDeletionDurations = append(pm.SessionDeletionDurations, d)
+}
+
+func (pm *PerformanceMetrics) AddSessionCreation(d time.Duration) {
+	pm.SessionCreationDurations = append(pm.SessionCreationDurations, d)
+}
+
+func (pm *PerformanceMetrics) AddAgentExecution(d time.Duration) {
+	pm.AgentExecutionDurations = append(pm.AgentExecutionDurations, d)
+}
+
+func (pm *PerformanceMetrics) PrintSummary() {
+	fmt.Printf("\n=== Performance Summary ===\n")
+	if len(pm.SessionDeletionDurations) > 0 {
+		fmt.Printf("Session deletion: min=%v, max=%v, avg=%v\n",
+			min(pm.SessionDeletionDurations),
+			max(pm.SessionDeletionDurations),
+			avg(pm.SessionDeletionDurations))
+	}
+	if len(pm.SessionCreationDurations) > 0 {
+		fmt.Printf("Session creation: min=%v, max=%v, avg=%v\n",
+			min(pm.SessionCreationDurations),
+			max(pm.SessionCreationDurations),
+			avg(pm.SessionCreationDurations))
+	}
+	if len(pm.AgentExecutionDurations) > 0 {
+		fmt.Printf("Agent execution: min=%v, max=%v, avg=%v\n",
+			min(pm.AgentExecutionDurations),
+			max(pm.AgentExecutionDurations),
+			avg(pm.AgentExecutionDurations))
+	}
+
+	// Calculate total session setup time (delete + create)
+	if len(pm.SessionDeletionDurations) > 0 && len(pm.SessionCreationDurations) > 0 {
+		var totalSetupTimes []time.Duration
+		for i := 0; i < len(pm.SessionDeletionDurations) && i < len(pm.SessionCreationDurations); i++ {
+			totalSetupTimes = append(totalSetupTimes, pm.SessionDeletionDurations[i]+pm.SessionCreationDurations[i])
+		}
+		if len(totalSetupTimes) > 0 {
+			fmt.Printf("Total session setup: min=%v, max=%v, avg=%v\n",
+				min(totalSetupTimes),
+				max(totalSetupTimes),
+				avg(totalSetupTimes))
+		}
+	}
+}
+
+func min(durations []time.Duration) time.Duration {
+	if len(durations) == 0 {
+		return 0
+	}
+	m := durations[0]
+	for _, d := range durations[1:] {
+		if d < m {
+			m = d
+		}
+	}
+	return m
+}
+
+func max(durations []time.Duration) time.Duration {
+	if len(durations) == 0 {
+		return 0
+	}
+	m := durations[0]
+	for _, d := range durations[1:] {
+		if d > m {
+			m = d
+		}
+	}
+	return m
+}
+
+func avg(durations []time.Duration) time.Duration {
+	if len(durations) == 0 {
+		return 0
+	}
+	var sum time.Duration
+	for _, d := range durations {
+		sum += d
+	}
+	return sum / time.Duration(len(durations))
+}
+
 func main() {
 	fmt.Println("Security Event Test Script")
 	fmt.Println("===========================")
 
+	// Initialize performance metrics
+	metrics := &PerformanceMetrics{}
+
 	// Load events from file
 	events, err := loadEvents(eventsFilePath)
 	if err != nil {
-		fmt.Printf("Failed to load events: %v\n", err)
+		fmt.Printf("failed to load events: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -68,7 +162,7 @@ func main() {
 			event.Location["building"],
 			event.Location["zone"])
 
-		if err := sendEvent(event, i+1); err != nil {
+		if err := sendEvent(event, i+1, metrics); err != nil {
 			fmt.Printf("❌ Error sending event: %v\n\n", err)
 			//continue
 			os.Exit(1)
@@ -84,6 +178,9 @@ func main() {
 	}
 
 	fmt.Printf("\n✅ All %d events processed successfully!\n", len(events))
+
+	// Print performance summary
+	metrics.PrintSummary()
 }
 
 func createSession() error {
@@ -107,7 +204,8 @@ func createSession() error {
 	return nil
 }
 
-func createSessionWithState(eventJSON string) error {
+func createSessionWithState(eventJSON string, metrics *PerformanceMetrics) error {
+	start := time.Now()
 	sessionURL := fmt.Sprintf("%s/api/apps/%s/users/%s/sessions/%s",
 		baseURL, appName, userID, sessionID)
 
@@ -141,7 +239,20 @@ func createSessionWithState(eventJSON string) error {
 	fmt.Printf("Session created successfully. Response: %s\n", string(body))
 
 	// Double-check by fetching the session
-	return verifySessionState()
+	err = verifySessionState()
+
+	duration := time.Since(start)
+	metrics.AddSessionCreation(duration)
+	fmt.Printf("⏱️  Session creation: %v\n", duration)
+
+	// Calculate and display total setup time
+	if len(metrics.SessionDeletionDurations) > 0 && len(metrics.SessionCreationDurations) > 0 {
+		totalSetup := metrics.SessionDeletionDurations[len(metrics.SessionDeletionDurations)-1] +
+			metrics.SessionCreationDurations[len(metrics.SessionCreationDurations)-1]
+		fmt.Printf("⏱️  Total session setup: %v\n\n", totalSetup)
+	}
+
+	return err
 }
 
 func verifySessionState() error {
@@ -160,7 +271,8 @@ func verifySessionState() error {
 	return nil
 }
 
-func deleteSession() error {
+func deleteSession(metrics *PerformanceMetrics) error {
+	start := time.Now()
 	sessionURL := fmt.Sprintf("%s/api/apps/%s/users/%s/sessions/%s",
 		baseURL, appName, userID, sessionID)
 
@@ -175,6 +287,10 @@ func deleteSession() error {
 		return fmt.Errorf("failed to delete session: %w", err)
 	}
 	defer resp.Body.Close()
+
+	duration := time.Since(start)
+	metrics.AddSessionDeletion(duration)
+	fmt.Printf("⏱️  Session deletion: %v\n", duration)
 
 	// Ignore errors - session might not exist
 	return nil
@@ -194,7 +310,7 @@ func loadEvents(filePath string) ([]SecurityEvent, error) {
 	return events, nil
 }
 
-func sendEvent(event SecurityEvent, eventNum int) error {
+func sendEvent(event SecurityEvent, eventNum int, metrics *PerformanceMetrics) error {
 	// Marshal the event to JSON string
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
@@ -202,10 +318,10 @@ func sendEvent(event SecurityEvent, eventNum int) error {
 	}
 
 	// Delete existing session (ignore errors if it doesn't exist)
-	deleteSession()
+	deleteSession(metrics)
 
 	// Create session with event data in initial state
-	if err := createSessionWithState(string(eventJSON)); err != nil {
+	if err := createSessionWithState(string(eventJSON), metrics); err != nil {
 		return fmt.Errorf("failed to create session with state: %w", err)
 	}
 
@@ -221,6 +337,9 @@ func sendEvent(event SecurityEvent, eventNum int) error {
 			},
 		},
 	}
+
+	// Start timing for agent execution
+	agentStart := time.Now()
 
 	// Marshal the request
 	requestJSON, err := json.Marshal(request)
@@ -290,6 +409,12 @@ func sendEvent(event SecurityEvent, eventNum int) error {
 					if partMap, ok := part.(map[string]interface{}); ok {
 						if text, ok := partMap["text"].(string); ok && text != "" {
 							fmt.Printf("        🎯 FINAL RECOMMENDATIONS:\n%s\n\n", text)
+
+							// Record agent execution time
+							agentDuration := time.Since(agentStart)
+							metrics.AddAgentExecution(agentDuration)
+							fmt.Printf("⏱️  Agent execution: %v\n\n", agentDuration)
+
 							return nil
 						}
 					}
@@ -297,6 +422,11 @@ func sendEvent(event SecurityEvent, eventNum int) error {
 			}
 		}
 	}
+
+	// If we get here, still record the timing
+	agentDuration := time.Since(agentStart)
+	metrics.AddAgentExecution(agentDuration)
+	fmt.Printf("⏱️  Agent execution: %v\n\n", agentDuration)
 
 	return nil
 }
