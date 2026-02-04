@@ -11,6 +11,7 @@ A comprehensive reference covering the architecture and internals of ADK-Go.
 - [Concurrency in ADK-Go: Which Agents Use Goroutines?](#concurrency-in-adk-go-which-agents-use-goroutines)
 - [ParallelAgent Deep Dive](#parallelagent-deep-dive)
 - [Channels Inside iter.Seq2: A Standalone Example](#channels-inside-iterseq2-a-standalone-example)
+- [LoopAgent: Iterative Workflow Pattern](#loopagent-iterative-workflow-pattern)
 - [State and Session Management](#state-and-session-management)
 - [Agent State Communication Patterns: OutputKey and Parallel Workflows](#agent-state-communication-patterns-outputkey-and-parallel-workflows)
 - [InputSchema and OutputSchema: Structured Data Enforcement](#inputschema-and-outputschema-structured-data-enforcement)
