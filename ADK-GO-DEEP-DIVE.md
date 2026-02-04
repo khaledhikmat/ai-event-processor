@@ -13,6 +13,7 @@ A comprehensive reference covering the architecture and internals of ADK-Go.
 - [Channels Inside iter.Seq2: A Standalone Example](#channels-inside-iterseq2-a-standalone-example)
 - [LoopAgent: Iterative Workflow Pattern](#loopagent-iterative-workflow-pattern)
 - [State and Session Management](#state-and-session-management)
+- [StateDelta: Incremental State Change Tracking](#statedelta-incremental-state-change-tracking)
 - [Agent State Communication Patterns: OutputKey and Parallel Workflows](#agent-state-communication-patterns-outputkey-and-parallel-workflows)
 - [InputSchema and OutputSchema: Structured Data Enforcement](#inputschema-and-outputschema-structured-data-enforcement)
 - [Reading JSON State in Agent Instructions](#reading-json-state-in-agent-instructions)
@@ -2560,6 +2561,633 @@ State persisted and available for future invocations
 4. **Copy-on-write safety** — The in-memory implementation clones sessions on retrieval to prevent external mutation.
 5. **Events carry state** — `StateDelta` on each event is the mechanism for state persistence; the session service extracts and routes deltas to the correct scope.
 6. **Mutable wrapper** — The Runner wraps raw sessions to control mutation access.
+
+---
+
+## StateDelta: Incremental State Change Tracking
+
+### Overview
+
+**StateDelta** is a mechanism for tracking **incremental state changes** during an agent invocation and persisting them to storage. It's a key-value map attached to each event that captures what state was modified during that event.
+
+**Location:** `session/session.go:142-160`
+
+**Key Concept:** Instead of saving the entire state after every event, ADK-Go only saves the **changes** (deltas), which are then applied to the appropriate storage scopes (app, user, or session).
+
+### The StateDelta Lifecycle
+
+#### 1. Event Creation with Empty StateDelta
+
+Every event is created with an empty StateDelta map (`session/session.go:133-140`):
+
+```go
+func NewEvent(invocationID string) *Event {
+    return &Event{
+        ID:           uuid.NewString(),
+        InvocationID: invocationID,
+        Timestamp:    time.Now(),
+        Actions:      EventActions{StateDelta: make(map[string]any)},
+    }
+}
+```
+
+#### 2. Populating StateDelta
+
+There are **two primary ways** StateDelta gets populated during agent execution:
+
+##### A) Automatic Population via OutputKey
+
+**Location:** `agent/llmagent/llmagent.go:410-415`
+
+When an LLMAgent has `OutputKey` configured, the agent's final response text is automatically saved to StateDelta:
+
+```go
+if event.Actions.StateDelta == nil {
+    event.Actions.StateDelta = make(map[string]any)
+}
+
+event.Actions.StateDelta[a.OutputKey] = result
+```
+
+**Example:**
+```go
+triageAgent, _ := llmagent.New(llmagent.Config{
+    Name:         "triage",
+    Description:  "Analyzes security events",
+    OutputKey:    "triage_output",  // Agent output saved to this key
+    Instructions: "Analyze the event and provide a triage assessment.",
+    Model:        gemini.Client().Gemini15Flash,
+})
+
+// When agent runs, its response is automatically saved:
+// event.Actions.StateDelta = {"triage_output": "The event indicates..."}
+```
+
+##### B) Manual Population via ctx.State().Set()
+
+**Location:** `internal/context/callback_context.go:116-121`
+
+In callbacks, tools, or custom agents, you can explicitly set state:
+
+```go
+func (c *callbackContextState) Set(key string, val any) error {
+    if c.ctx.eventActions != nil && c.ctx.eventActions.StateDelta != nil {
+        c.ctx.eventActions.StateDelta[key] = val  // Adds to StateDelta
+    }
+    return c.ctx.invocationCtx.Session().State().Set(key, val)  // Also updates in-memory state
+}
+```
+
+**Example - In a Tool:**
+```go
+type MyTool struct{}
+
+func (t *MyTool) Execute(ctx tool.Context, args MyArgs) (MyResult, error) {
+    // Process the request...
+    result := processData(args)
+
+    // Save result to state - this goes into StateDelta
+    ctx.State().Set("processing_result", result)
+
+    return MyResult{Success: true}, nil
+}
+
+// After tool execution:
+// event.Actions.StateDelta = {"processing_result": {...}}
+```
+
+**Example - In a Custom Agent:**
+```go
+func CustomAgentRun(ctx agent.InvocationContext) iter.Seq2[*session.Event, error] {
+    return func(yield func(*session.Event, error) bool) {
+        // Do some processing...
+        data := analyzeData()
+
+        // Save to state
+        ctx.Session().State().Set("analysis_complete", true)
+        ctx.Session().State().Set("analysis_data", data)
+
+        // Yield event - StateDelta will contain the state changes
+        yield(&session.Event{
+            LLMResponse: model.LLMResponse{
+                Content: &genai.Content{
+                    Parts: []*genai.Part{{Text: "Analysis complete"}},
+                },
+            },
+        }, nil)
+    }
+}
+
+// event.Actions.StateDelta = {
+//     "analysis_complete": true,
+//     "analysis_data": {...}
+// }
+```
+
+#### 3. State Scoping with Prefixes
+
+**Location:** `internal/sessionutils/utils.go:22-54`
+
+StateDelta supports **four scopes** using key prefixes:
+
+```go
+const (
+    appPrefix  = "app:"    // Shared across all users and sessions
+    userPrefix = "user:"   // Shared across all sessions for a user
+    tempPrefix = "temp:"   // Temporary, discarded after invocation
+    // No prefix = session-scoped (default)
+)
+```
+
+**ExtractStateDeltas** splits StateDelta by scope:
+
+```go
+func ExtractStateDeltas(delta map[string]any) (
+    appStateDelta, userStateDelta, sessionStateDelta map[string]any,
+) {
+    appStateDelta = make(map[string]any)
+    userStateDelta = make(map[string]any)
+    sessionStateDelta = make(map[string]any)
+
+    for key, value := range delta {
+        if cleanKey, found := strings.CutPrefix(key, "app:"); found {
+            appStateDelta[cleanKey] = value  // "app:theme" → theme in app state
+        } else if cleanKey, found := strings.CutPrefix(key, "user:"); found {
+            userStateDelta[cleanKey] = value  // "user:name" → name in user state
+        } else if !strings.HasPrefix(key, "temp:") {
+            sessionStateDelta[key] = value  // "event_data" → session state
+        }
+        // temp: keys are ignored/discarded
+    }
+    return appStateDelta, userStateDelta, sessionStateDelta
+}
+```
+
+**Example - Using Different Scopes:**
+
+```go
+// In an agent or tool
+
+// Session-scoped (default) - available only in this session
+ctx.State().Set("current_event_id", "evt_12345")
+
+// User-scoped - available across all sessions for this user
+ctx.State().Set("user:preferred_language", "en")
+ctx.State().Set("user:notification_settings", settings)
+
+// App-scoped - available across all users and sessions
+ctx.State().Set("app:global_config_version", "v2.1")
+ctx.State().Set("app:feature_flags", flags)
+
+// Temporary - available during this invocation only, NOT persisted
+ctx.State().Set("temp:intermediate_calculation", tempData)
+ctx.State().Set("temp:working_buffer", buffer)
+
+// StateDelta contains all of them:
+// {
+//   "current_event_id": "evt_12345",
+//   "user:preferred_language": "en",
+//   "user:notification_settings": {...},
+//   "app:global_config_version": "v2.1",
+//   "app:feature_flags": {...},
+//   "temp:intermediate_calculation": {...},
+//   "temp:working_buffer": {...}
+// }
+
+// But ExtractStateDeltas splits them:
+// appStateDelta:     {"global_config_version": "v2.1", "feature_flags": {...}}
+// userStateDelta:    {"preferred_language": "en", "notification_settings": {...}}
+// sessionStateDelta: {"current_event_id": "evt_12345"}
+// temp: keys are discarded (not persisted)
+```
+
+#### 4. Persisting StateDelta to Storage
+
+**Location:** `session/inmemory.go:197-236`
+
+When `AppendEvent()` is called (after each non-partial event), StateDelta is extracted and applied to the appropriate state stores:
+
+```go
+func (s *inMemoryService) AppendEvent(ctx context.Context, curSession Session, event *Event) error {
+    if event.Partial {
+        return nil  // Skip partial events
+    }
+
+    // Append event to history
+    stored_session.events = append(stored_session.events, event)
+    stored_session.updatedAt = event.Timestamp
+
+    // Extract and apply StateDelta to appropriate scopes
+    if len(event.Actions.StateDelta) > 0 {
+        appDelta, userDelta, sessionDelta := sessionutils.ExtractStateDeltas(event.Actions.StateDelta)
+
+        s.updateAppState(appDelta, curSession.AppName())         // → app-level storage
+        s.updateUserState(userDelta, curSession.AppName(), curSession.UserID())  // → user-level storage
+        maps.Copy(stored_session.state, sessionDelta)            // → session-level storage
+    }
+    return nil
+}
+```
+
+**How updateAppState works** (`session/inmemory.go:238-246`):
+
+```go
+func (s *inMemoryService) updateAppState(appDelta stateMap, appName string) stateMap {
+    innerMap, ok := s.appState[appName]
+    if !ok {
+        innerMap = make(stateMap)
+        s.appState[appName] = innerMap
+    }
+    maps.Copy(innerMap, appDelta)  // Merge delta into app state
+    return innerMap
+}
+```
+
+**How updateUserState works** (`session/inmemory.go:248-261`):
+
+```go
+func (s *inMemoryService) updateUserState(userDelta stateMap, appName, userID string) stateMap {
+    innerUsersMap, ok := s.userState[appName]
+    if !ok {
+        innerUsersMap = make(map[string]stateMap)
+        s.userState[appName] = innerUsersMap
+    }
+    innerMap, ok := innerUsersMap[userID]
+    if !ok {
+        innerMap = make(stateMap)
+        innerUsersMap[userID] = innerMap
+    }
+    maps.Copy(innerMap, userDelta)  // Merge delta into user state
+    return innerMap
+}
+```
+
+### Complete Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 1. Agent Execution                                                      │
+│    - LLMAgent with OutputKey: "triage_output"                          │
+│    - Tool calls ctx.State().Set("correlation_data", data)              │
+│    - Callback sets ctx.State().Set("user:last_active", timestamp)      │
+│    - Agent sets ctx.State().Set("app:request_count", count)            │
+│    - Temporary working data: ctx.State().Set("temp:buffer", temp)      │
+└─────────────────┬───────────────────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 2. Event Created with StateDelta                                       │
+│    event.Actions.StateDelta = {                                         │
+│      "triage_output": "High severity event detected...",               │
+│      "correlation_data": {"related_events": [...]},                    │
+│      "user:last_active": "2025-01-15T10:30:00Z",                       │
+│      "app:request_count": 1523,                                         │
+│      "temp:buffer": [...]                                               │
+│    }                                                                     │
+└─────────────────┬───────────────────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 3. AppendEvent() → ExtractStateDeltas()                                │
+│    appDelta:     {"request_count": 1523}                               │
+│    userDelta:    {"last_active": "2025-01-15T10:30:00Z"}              │
+│    sessionDelta: {"triage_output": "...", "correlation_data": {...}}   │
+│    temp: keys discarded                                                 │
+└─────────────────┬───────────────────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 4. Applied to Storage                                                   │
+│    ┌──────────────────┐  ┌──────────────────┐  ┌────────────────────┐ │
+│    │ App Storage      │  │ User Storage     │  │ Session Storage    │ │
+│    │ (app: "my_app")  │  │ (user: "user123")│  │ (session: "sess1") │ │
+│    │                  │  │                  │  │                    │ │
+│    │ request_count    │  │ last_active      │  │ triage_output      │ │
+│    │   = 1523         │  │   = "2025-..."   │  │   = "High sev..."  │ │
+│    │                  │  │                  │  │ correlation_data   │ │
+│    │ Shared across    │  │ Shared across    │  │   = {...}          │ │
+│    │ ALL users &      │  │ user's sessions  │  │                    │ │
+│    │ sessions         │  │                  │  │ Session-specific   │ │
+│    └──────────────────┘  └──────────────────┘  └────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Real-World Use Cases
+
+#### Use Case 1: Multi-Agent Communication via StateDelta
+
+**Scenario:** ParallelAgent runs multiple analysis agents, then a response agent synthesizes results.
+
+```go
+// Triage agent automatically saves output to StateDelta
+triageAgent, _ := llmagent.New(llmagent.Config{
+    Name:      "triage",
+    OutputKey: "triage_output",  // → StateDelta["triage_output"]
+    // ...
+})
+
+// Correlation agent automatically saves output to StateDelta
+correlationAgent, _ := llmagent.New(llmagent.Config{
+    Name:      "correlation",
+    OutputKey: "correlation_output",  // → StateDelta["correlation_output"]
+    // ...
+})
+
+// Parallel agent runs both
+parallelAgent, _ := parallelagent.New(parallelagent.Config{
+    AgentConfig: agent.Config{
+        SubAgents: []agent.Agent{triageAgent, correlationAgent},
+    },
+})
+
+// Response agent reads from state (populated by StateDelta)
+responseAgent, _ := llmagent.New(llmagent.Config{
+    Name: "response",
+    Instructions: `
+Based on the analysis results:
+
+Triage: {triage_output}
+Correlation: {correlation_output}
+
+Provide final recommendations.
+`,
+    // Template variables are replaced with values from state
+})
+```
+
+**What happens:**
+1. ParallelAgent runs triage and correlation agents concurrently
+2. Each agent's output is saved to `event.Actions.StateDelta` via OutputKey
+3. StateDelta is persisted to session state via `AppendEvent()`
+4. Response agent's instructions have `{triage_output}` and `{correlation_output}` replaced with actual values from state
+5. Response agent generates final recommendations
+
+#### Use Case 2: User Preferences Across Sessions
+
+**Scenario:** Remember user preferences across multiple sessions.
+
+```go
+// First session - user sets preferences
+func SavePreferences(ctx tool.Context, args PreferenceArgs) error {
+    // Use "user:" prefix for cross-session persistence
+    ctx.State().Set("user:theme", args.Theme)
+    ctx.State().Set("user:language", args.Language)
+    ctx.State().Set("user:notification_enabled", args.NotifyEnabled)
+
+    return nil
+}
+
+// StateDelta = {
+//   "user:theme": "dark",
+//   "user:language": "en",
+//   "user:notification_enabled": true
+// }
+
+// These are stored in user-scoped storage
+// Available in ALL future sessions for this user
+
+// Second session (different session ID, same user)
+greetingAgent, _ := llmagent.New(llmagent.Config{
+    Instructions: `
+Greet the user in their preferred language: {user:language}
+Current theme: {user:theme}
+Notifications: {user:notification_enabled}
+`,
+})
+
+// Template variables are replaced with user-scoped state values
+// even though this is a different session!
+```
+
+#### Use Case 3: Application-Wide Configuration
+
+**Scenario:** Store global feature flags or configuration shared across all users.
+
+```go
+// Admin tool updates app-wide config
+func UpdateFeatureFlags(ctx tool.Context, flags FeatureFlags) error {
+    // Use "app:" prefix for app-wide persistence
+    ctx.State().Set("app:feature_experimental_ui", flags.ExperimentalUI)
+    ctx.State().Set("app:max_concurrent_requests", flags.MaxConcurrent)
+    ctx.State().Set("app:maintenance_mode", flags.MaintenanceMode)
+
+    return nil
+}
+
+// StateDelta = {
+//   "app:feature_experimental_ui": true,
+//   "app:max_concurrent_requests": 100,
+//   "app:maintenance_mode": false
+// }
+
+// These are stored in app-scoped storage
+// Available to ALL users and ALL sessions
+
+// Any agent can read app-wide config
+agent, _ := llmagent.New(llmagent.Config{
+    Instructions: `
+Check if maintenance mode is enabled: {app:maintenance_mode}
+Max concurrent requests: {app:max_concurrent_requests}
+`,
+})
+```
+
+#### Use Case 4: Temporary Working Data
+
+**Scenario:** Store intermediate results needed during invocation but not persisted.
+
+```go
+func ProcessLargeDataset(ctx tool.Context, data LargeDataset) error {
+    // Store intermediate results temporarily
+    ctx.State().Set("temp:chunk_1_result", processChunk1(data))
+    ctx.State().Set("temp:chunk_2_result", processChunk2(data))
+    ctx.State().Set("temp:chunk_3_result", processChunk3(data))
+
+    // Combine results
+    final := combineResults(
+        ctx.State().Get("temp:chunk_1_result"),
+        ctx.State().Get("temp:chunk_2_result"),
+        ctx.State().Get("temp:chunk_3_result"),
+    )
+
+    // Save final result (persisted)
+    ctx.State().Set("processing_complete", true)
+    ctx.State().Set("final_result", final)
+
+    return nil
+}
+
+// During invocation:
+// - temp: keys are available via ctx.State().Get()
+// - After invocation completes, temp: keys are discarded
+// - Only "processing_complete" and "final_result" are persisted
+```
+
+#### Use Case 5: Tracking Tool Execution in StateDelta
+
+**Scenario:** Tool saves its execution result to state for downstream agents.
+
+```go
+type WeatherTool struct{}
+
+func (t *WeatherTool) Execute(ctx tool.Context, args WeatherArgs) (WeatherResult, error) {
+    weather := fetchWeather(args.Location)
+
+    // Save to state for downstream use
+    ctx.State().Set("current_weather", weather)
+    ctx.State().Set("weather_location", args.Location)
+    ctx.State().Set("weather_timestamp", time.Now())
+
+    return WeatherResult{
+        Temperature: weather.Temp,
+        Conditions:  weather.Conditions,
+    }, nil
+}
+
+// StateDelta after tool execution:
+// {
+//   "current_weather": {...},
+//   "weather_location": "San Francisco",
+//   "weather_timestamp": "2025-01-15T10:30:00Z"
+// }
+
+// Another agent can use this state
+advisorAgent, _ := llmagent.New(llmagent.Config{
+    Instructions: `
+Based on current weather in {weather_location}:
+{current_weather}
+
+Provide outdoor activity recommendations.
+`,
+})
+```
+
+### Reading StateDelta Values
+
+When you call `ctx.State().Get("key")`, it reads from the **merged state** which includes:
+1. App-scoped state (with "app:" prefix)
+2. User-scoped state (with "user:" prefix)
+3. Session-scoped state
+4. Temporary state (with "temp:" prefix) - available during invocation only
+
+**Example:**
+
+```go
+// Reading different scopes
+sessionValue, _ := ctx.State().Get("event_data")            // Session-scoped
+userValue, _ := ctx.State().Get("user:preferences")        // User-scoped
+appValue, _ := ctx.State().Get("app:global_config")        // App-scoped
+tempValue, _ := ctx.State().Get("temp:working_buffer")     // Temporary
+
+// All are available during the invocation
+// But only non-temp values are persisted after invocation completes
+```
+
+### StateDelta in REST API Responses
+
+The REST API includes StateDelta in event responses, allowing clients to see what state changed:
+
+```json
+{
+  "events": [
+    {
+      "id": "evt_123",
+      "author": "triage_agent",
+      "content": {
+        "parts": [{"text": "High severity event detected"}]
+      },
+      "actions": {
+        "stateDelta": {
+          "triage_output": "High severity event detected in zone A...",
+          "severity_level": "HIGH",
+          "recommended_action": "immediate_response"
+        }
+      }
+    }
+  ]
+}
+```
+
+Clients can extract StateDelta to:
+- Display what changed to users
+- Update local state caches
+- Track state evolution over time
+- Debug state-related issues
+
+### Important Notes
+
+1. **StateDelta is per-event**: Each event has its own StateDelta map tracking what changed during that event.
+
+2. **Automatic persistence**: You don't manually persist StateDelta - it's automatically applied when `AppendEvent()` is called by the Runner.
+
+3. **Scoping is powerful**: Use `app:`, `user:`, and `temp:` prefixes to control data scope and lifetime.
+
+4. **OutputKey is syntactic sugar**: Instead of manually setting StateDelta in your agent, use `OutputKey` for cleaner code.
+
+5. **Dual-write pattern**: When you call `ctx.State().Set(key, val)`, it both:
+   - Updates the in-memory session state immediately
+   - Adds to the current event's StateDelta for persistence
+
+6. **Partial events skipped**: Only non-partial events have their StateDelta persisted. Partial events (streaming chunks) don't trigger state updates.
+
+7. **Reading state**: `ctx.State().Get("key")` reads from the merged state (app + user + session + temp), which was populated from previous events' StateDelta.
+
+8. **StateDelta vs direct state access**:
+   - `ctx.State().Set()` → adds to StateDelta AND updates in-memory state
+   - `ctx.Session().State().Set()` → same behavior (they're equivalent in most contexts)
+
+### Debugging StateDelta
+
+**Enable logging to see StateDelta in action:**
+
+```go
+// In your session service's AppendEvent
+log.Printf("Event %s StateDelta: %+v", event.ID, event.Actions.StateDelta)
+
+// After extraction
+appDelta, userDelta, sessionDelta := sessionutils.ExtractStateDeltas(event.Actions.StateDelta)
+log.Printf("App delta: %+v", appDelta)
+log.Printf("User delta: %+v", userDelta)
+log.Printf("Session delta: %+v", sessionDelta)
+```
+
+**Check state in REST API responses:**
+
+Look for the `stateDelta` field in event actions to see what changed.
+
+**Verify state persistence:**
+
+```go
+// After agent execution, check session state
+session, _ := sessionService.Get(ctx, &session.GetRequest{
+    AppName:   "my_app",
+    UserID:    "user123",
+    SessionID: "sess456",
+})
+
+// Iterate over all state
+for key, value := range session.State().All() {
+    log.Printf("State[%s] = %v", key, value)
+}
+```
+
+### Best Practices
+
+1. **Use OutputKey for LLM agents**: Simpler than manually managing StateDelta.
+
+2. **Choose the right scope**:
+   - Session (default): Conversation-specific data
+   - `user:`: Cross-session user data (preferences, history)
+   - `app:`: Global configuration, shared resources
+   - `temp:`: Intermediate calculations, working buffers
+
+3. **Descriptive keys**: Use clear, namespaced keys like `triage_output`, `user:notification_settings`, `app:feature_flags`.
+
+4. **Avoid storing large blobs**: StateDelta is persisted with every event. Keep values reasonably sized.
+
+5. **Use temp: for ephemeral data**: Don't persist data that's only needed during the invocation.
+
+6. **Monitor StateDelta size**: Large StateDelta maps can impact performance and storage.
 
 ---
 
