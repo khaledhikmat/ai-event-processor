@@ -1717,6 +1717,594 @@ Run with: `go run main.go` from the `go-yield/` directory.
 
 ---
 
+## LoopAgent: Iterative Workflow Pattern
+
+### Overview
+
+`LoopAgent` is a workflow agent that executes one or more sub-agents repeatedly in a loop until a stop condition is met. It's useful for iterative refinement, retry logic, monitoring loops, and scenarios where the agent needs to repeatedly perform operations until a goal is achieved.
+
+**Location:** `agent/workflowagents/loopagent/agent.go`
+
+**Key Characteristics:**
+- Executes sub-agents sequentially in each iteration
+- Supports multiple stop conditions
+- Can run indefinitely or for a fixed number of iterations
+- Sub-agents can signal completion via escalation
+- Each iteration processes all sub-agents in order
+
+### Configuration
+
+```go
+type Config struct {
+    MaxIterations int           // Maximum number of iterations (0 = infinite)
+    AgentConfig   agent.Config  // Standard agent configuration with sub-agents
+}
+```
+
+**Creating a LoopAgent:**
+
+```go
+loopAgent, err := loopagent.New(loopagent.Config{
+    MaxIterations: 5,  // Stop after 5 iterations
+    AgentConfig: agent.Config{
+        Name:        "retry_agent",
+        Description: "Retries operations until success",
+        SubAgents:   []agent.Agent{operationAgent, validatorAgent},
+    },
+})
+```
+
+### Stop Conditions
+
+The LoopAgent has **four stop conditions** that can terminate the loop:
+
+#### 1. MaxIterations Reached
+
+The most common stop condition. When `MaxIterations > 0`, the loop stops after that many iterations.
+
+```go
+loopAgent, err := loopagent.New(loopagent.Config{
+    MaxIterations: 3,  // Runs exactly 3 times
+    AgentConfig: agent.Config{
+        Name:        "loop_agent",
+        SubAgents:   []agent.Agent{customAgent},
+    },
+})
+```
+
+**Implementation (from agent.go:80-92):**
+```go
+func (a *loopAgent) Run(ctx agent.InvocationContext) iter.Seq2[*session.Event, error] {
+    count := a.maxIterations
+
+    return func(yield func(*session.Event, error) bool) {
+        for {
+            // ... run sub-agents ...
+
+            if count > 0 {
+                count--
+                if count == 0 {
+                    return  // STOP: MaxIterations reached
+                }
+            }
+        }
+    }
+}
+```
+
+**When to Use:**
+- Bounded retry logic (try 3 times then give up)
+- Fixed number of refinement iterations
+- Safety limit for potentially infinite loops
+
+**Best Practice:** Always set `MaxIterations > 0` as a safety limit, even when using other stop conditions like escalation.
+
+#### 2. Sub-Agent Escalation
+
+Sub-agents can stop the loop by setting `event.Actions.Escalate = true`. This signals that the goal has been achieved or the loop should terminate.
+
+**Implementation (from agent.go:80-92):**
+```go
+shouldExit := false
+for _, subAgent := range ctx.Agent().SubAgents() {
+    for event, err := range subAgent.Run(ctx) {
+        if !yield(event, err) {
+            return  // Consumer cancelled
+        }
+
+        if event.Actions.Escalate {
+            shouldExit = true  // STOP: Sub-agent requested escalation
+        }
+    }
+    if shouldExit {
+        return
+    }
+}
+```
+
+**Example: Iterative Refinement with Goal-Based Stopping**
+
+```go
+// Create a goal-checking agent that escalates when complete
+goalCheckerAgent, _ := llmagent.New(llmagent.Config{
+    Name:        "goal_checker",
+    Description: "Checks if the goal is achieved",
+    Instructions: `
+You are monitoring progress toward a goal.
+
+Current state: {progress_data}
+
+If the goal is achieved (quality score >= 0.95), respond with:
+GOAL_ACHIEVED
+
+Otherwise respond with:
+CONTINUE - [brief reason why goal not yet met]
+`,
+    OutputKey: "goal_status",
+    Model:     gemini.Client().Gemini15Flash,
+})
+
+// Create the loop agent with escalation-based stopping
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 10,  // Safety limit
+    AgentConfig: agent.Config{
+        Name:      "iterative_refiner",
+        SubAgents: []agent.Agent{refinementAgent, goalCheckerAgent},
+        Instructions: `
+Run iterative refinement until the goal is achieved.
+Each iteration:
+1. Refine the solution
+2. Check if goal is met
+`,
+    },
+})
+
+// Process results - loop stops when goal checker escalates
+for event, err := range loopAgent.Run(ctx) {
+    if err != nil {
+        // Handle error
+        continue
+    }
+
+    // Check for escalation
+    if event.Actions.Escalate {
+        fmt.Println("Goal achieved! Loop stopped via escalation.")
+        break
+    }
+
+    // Process intermediate results
+    if goalStatus, exists := event.Actions.StateDelta["goal_status"]; exists {
+        fmt.Printf("Iteration status: %v\n", goalStatus)
+    }
+}
+```
+
+**How to Escalate from a Sub-Agent:**
+
+In an LLM-based agent, you can use instructions to conditionally escalate:
+
+```go
+Instructions: `
+Analyze the current state: {current_state}
+
+If the condition is met, respond EXACTLY with:
+ESCALATE: [reason]
+
+Otherwise, continue processing normally.
+`,
+```
+
+Then in a callback or post-processor, detect "ESCALATE" and set the flag:
+
+```go
+func checkForEscalation(ctx agent.InvocationContext, event *session.Event) {
+    if event.Content != nil && len(event.Content.Parts) > 0 {
+        if text := event.Content.Parts[0].Text; strings.HasPrefix(text, "ESCALATE") {
+            event.Actions.Escalate = true
+        }
+    }
+}
+```
+
+**When to Use:**
+- Goal-based stopping (loop until quality threshold met)
+- Success detection (loop until operation succeeds)
+- Condition-based termination (loop until state changes)
+- LLM-driven decisions about when to stop
+
+#### 3. Consumer Cancellation
+
+The consumer of the iterator can stop the loop by returning `false` from the yield callback (typically by breaking out of the range loop).
+
+```go
+for event, err := range loopAgent.Run(ctx) {
+    if err != nil {
+        fmt.Printf("Error: %v\n", err)
+        break  // Stops the loop
+    }
+
+    // Custom stop condition in consumer
+    if someCondition {
+        fmt.Println("Custom condition met, stopping loop")
+        break  // yield returns false, loop stops
+    }
+
+    // Process event...
+}
+```
+
+**When to Use:**
+- External stop conditions (user cancellation, timeout)
+- Resource limits (memory, cost thresholds)
+- Custom business logic in the consumer
+
+#### 4. Error Propagation
+
+If a sub-agent yields an error, the LoopAgent propagates it to the consumer. The consumer can then decide whether to stop or continue.
+
+```go
+for event, err := range loopAgent.Run(ctx) {
+    if err != nil {
+        fmt.Printf("Sub-agent error: %v\n", err)
+        // Decide whether to stop or continue
+        if isFatalError(err) {
+            break  // Stop the loop
+        }
+        // Otherwise continue to next iteration
+    }
+}
+```
+
+**When to Use:**
+- Retry logic with error handling
+- Graceful degradation
+- Logging errors but continuing processing
+
+### Real-World Examples
+
+#### Example 1: Iterative Refinement Until Quality Threshold
+
+```go
+// Agent that refines a solution
+refineAgent, _ := llmagent.New(llmagent.Config{
+    Name:        "refiner",
+    Description: "Refines the solution based on feedback",
+    Instructions: `
+Current solution: {solution}
+Feedback: {feedback}
+
+Improve the solution to address the feedback.
+`,
+    OutputKey: "solution",
+    Model:     gemini.Client().Gemini15Flash,
+})
+
+// Agent that evaluates quality and escalates when threshold met
+evaluatorAgent, _ := llmagent.New(llmagent.Config{
+    Name:        "evaluator",
+    Description: "Evaluates solution quality",
+    Instructions: `
+Evaluate this solution: {solution}
+
+Rate quality from 0.0 to 1.0.
+If quality >= 0.95, respond with: ESCALATE: Quality threshold met
+Otherwise provide feedback for improvement.
+`,
+    OutputKey: "feedback",
+    Model:     gemini.Client().Gemini15Flash,
+})
+
+// Loop agent coordinates the refinement process
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 5,  // Maximum 5 refinement iterations
+    AgentConfig: agent.Config{
+        Name:        "refinement_loop",
+        Description: "Iteratively refines solution until quality threshold",
+        SubAgents:   []agent.Agent{refineAgent, evaluatorAgent},
+    },
+})
+
+// Execute with initial solution in state
+ctx.Session().State().Set("solution", "Initial draft solution...")
+
+for event, err := range loopAgent.Run(ctx) {
+    if err != nil {
+        log.Printf("Error: %v", err)
+        continue
+    }
+
+    if event.Actions.Escalate {
+        log.Println("Quality threshold achieved!")
+        break
+    }
+}
+
+// Final solution is in state
+finalSolution := ctx.Session().State().Get("solution")
+```
+
+#### Example 2: Retry Logic with Exponential Backoff
+
+```go
+type retryAgent struct {
+    operation    func() error
+    currentDelay time.Duration
+}
+
+func (a *retryAgent) Run(ctx agent.InvocationContext) iter.Seq2[*session.Event, error] {
+    return func(yield func(*session.Event, error) bool) {
+        err := a.operation()
+
+        if err == nil {
+            // Success - escalate to stop the loop
+            yield(&session.Event{
+                LLMResponse: model.LLMResponse{
+                    Content: &genai.Content{
+                        Parts: []*genai.Part{{Text: "Operation succeeded"}},
+                    },
+                },
+                Actions: session.Actions{
+                    Escalate: true,  // Stop the loop
+                },
+            }, nil)
+            return
+        }
+
+        // Failed - report error and wait before retry
+        yield(&session.Event{
+            LLMResponse: model.LLMResponse{
+                Content: &genai.Content{
+                    Parts: []*genai.Part{{
+                        Text: fmt.Sprintf("Operation failed: %v. Retrying in %v...", err, a.currentDelay),
+                    }},
+                },
+            },
+        }, nil)
+
+        time.Sleep(a.currentDelay)
+        a.currentDelay *= 2  // Exponential backoff
+    }
+}
+
+// Loop agent with retry logic
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 5,  // Try up to 5 times
+    AgentConfig: agent.Config{
+        Name:      "retry_loop",
+        SubAgents: []agent.Agent{&retryAgent{
+            operation:    riskyOperation,
+            currentDelay: 1 * time.Second,
+        }},
+    },
+})
+```
+
+#### Example 3: Infinite Monitoring Loop
+
+```go
+// Monitoring agent that checks system status
+monitorAgent, _ := llmagent.New(llmagent.Config{
+    Name:        "monitor",
+    Description: "Monitors system status",
+    Instructions: `
+Check the current system metrics: {metrics}
+
+If any critical threshold is exceeded, respond with:
+ALERT: [description of issue]
+
+Otherwise respond with:
+HEALTHY: All systems normal
+`,
+    OutputKey: "status",
+    Model:     gemini.Client().Gemini15Flash,
+})
+
+// Infinite loop (MaxIterations = 0)
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 0,  // Run forever
+    AgentConfig: agent.Config{
+        Name:      "monitoring_loop",
+        SubAgents: []agent.Agent{monitorAgent, metricsCollectorAgent},
+    },
+})
+
+// Consumer controls stopping based on external conditions
+ctx, cancel := context.WithCancel(context.Background())
+go func() {
+    <-shutdownSignal  // Wait for shutdown signal
+    cancel()          // Cancel context
+}()
+
+for event, err := range loopAgent.Run(ctx) {
+    if err != nil {
+        if errors.Is(err, context.Canceled) {
+            log.Println("Monitoring loop stopped via context cancellation")
+            break
+        }
+        log.Printf("Monitor error: %v", err)
+        continue
+    }
+
+    // Process monitoring results
+    if status, exists := event.Actions.StateDelta["status"]; exists {
+        if strings.HasPrefix(status.(string), "ALERT") {
+            triggerAlert(status.(string))
+        }
+    }
+
+    time.Sleep(30 * time.Second)  // Check every 30 seconds
+}
+```
+
+### LoopAgent vs Custom Run Implementation
+
+Both LoopAgent and custom `Run()` implementations can create loops, but they serve different purposes:
+
+#### LoopAgent (Built-in Workflow Agent)
+
+**When to Use:**
+- Executing **existing agents** in a loop
+- Standard iterative patterns (retry, refinement, monitoring)
+- Multiple sub-agents per iteration
+- Leveraging built-in stop conditions (MaxIterations, Escalation)
+
+**Characteristics:**
+- Runs all sub-agents sequentially in each iteration
+- Built-in MaxIterations and escalation support
+- Sub-agents can be any agent type (LLM, custom, workflow)
+- State management handled by sub-agents
+
+**Example:**
+```go
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 3,
+    AgentConfig: agent.Config{
+        Name:      "loop_workflow",
+        SubAgents: []agent.Agent{analyzerAgent, validatorAgent},
+    },
+})
+```
+
+#### Custom Run Implementation
+
+**When to Use:**
+- **Custom iteration logic** that doesn't fit the sub-agent pattern
+- Performance-critical loops without LLM calls
+- Complex state transitions or timing logic
+- Fine-grained control over each iteration
+
+**Characteristics:**
+- Complete control over iteration logic
+- Can mix LLM calls with custom code
+- Custom stop conditions
+- Direct state manipulation
+
+**Example:**
+```go
+type iterativeProcessor struct {
+    threshold float64
+}
+
+func (a *iterativeProcessor) Run(ctx agent.InvocationContext) iter.Seq2[*session.Event, error] {
+    return func(yield func(*session.Event, error) bool) {
+        for i := 0; i < 10; i++ {
+            // Custom iteration logic
+            result := a.processData(ctx)
+
+            if !yield(&session.Event{
+                LLMResponse: model.LLMResponse{
+                    Content: &genai.Content{
+                        Parts: []*genai.Part{{
+                            Text: fmt.Sprintf("Iteration %d: %v", i, result),
+                        }},
+                    },
+                },
+            }, nil) {
+                return  // Consumer cancelled
+            }
+
+            // Custom stop condition
+            if result.quality > a.threshold {
+                return  // Goal achieved
+            }
+
+            time.Sleep(time.Duration(i) * time.Second)  // Custom timing
+        }
+    }
+}
+```
+
+**Comparison Table:**
+
+| Feature | LoopAgent | Custom Run |
+|---------|-----------|------------|
+| Use Case | Orchestrate existing agents | Custom iteration logic |
+| Sub-Agents | Yes (runs them in sequence) | No (you implement logic) |
+| LLM Calls | Via sub-agents | Optional (you decide) |
+| MaxIterations | Built-in config | You implement |
+| Escalation | Built-in support | You implement |
+| Complexity | Simple configuration | More code required |
+| Flexibility | Limited to sub-agent pattern | Complete control |
+| Performance | Overhead of sub-agent calls | Optimized for your use case |
+
+**When to Combine Both:**
+
+You can use a custom Run implementation **as a sub-agent** inside a LoopAgent:
+
+```go
+// Custom agent with specific logic
+customAgent := &myCustomAgent{threshold: 0.9}
+
+// Use it inside a LoopAgent alongside LLM agents
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 5,
+    AgentConfig: agent.Config{
+        Name:      "hybrid_loop",
+        SubAgents: []agent.Agent{
+            customAgent,        // Custom logic
+            llmAnalyzerAgent,  // LLM-based analysis
+            llmValidatorAgent, // LLM-based validation
+        },
+    },
+})
+```
+
+### Best Practices
+
+1. **Always Set MaxIterations:** Even when using escalation-based stopping, set `MaxIterations > 0` as a safety limit to prevent infinite loops.
+
+2. **Use Escalation for Goal-Based Stopping:** When the loop should stop based on achieving a condition, use `event.Actions.Escalate = true` rather than relying on MaxIterations.
+
+3. **Handle Errors Gracefully:** Decide whether errors should stop the loop or allow retry. Don't silently ignore errors.
+
+4. **State Between Iterations:** Use `OutputKey` in sub-agents to update session state, which subsequent iterations can access via template variables.
+
+5. **Monitor Iteration Count:** In consumer code, track which iteration you're on for debugging and metrics.
+
+6. **Consider Performance:** Each iteration runs all sub-agents sequentially. For parallel processing, use ParallelAgent instead.
+
+7. **Timeout Protection:** If using `MaxIterations: 0` (infinite loop), always have an external timeout or cancellation mechanism.
+
+### Common Patterns
+
+**Pattern 1: Retry Until Success**
+```go
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 5,
+    AgentConfig: agent.Config{
+        Name:      "retry_loop",
+        SubAgents: []agent.Agent{operationAgent, successCheckerAgent},
+    },
+})
+// successCheckerAgent escalates on success
+```
+
+**Pattern 2: Iterative Refinement**
+```go
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 10,
+    AgentConfig: agent.Config{
+        Name:      "refinement_loop",
+        SubAgents: []agent.Agent{refineAgent, qualityCheckerAgent},
+    },
+})
+// qualityCheckerAgent escalates when quality threshold met
+```
+
+**Pattern 3: Periodic Monitoring**
+```go
+loopAgent, _ := loopagent.New(loopagent.Config{
+    MaxIterations: 0,  // Infinite
+    AgentConfig: agent.Config{
+        Name:      "monitor_loop",
+        SubAgents: []agent.Agent{checkAgent, alertAgent},
+    },
+})
+// Consumer breaks on shutdown signal
+```
+
+---
+
 ## State and Session Management
 
 ### Session Service Interface

@@ -8,11 +8,12 @@
 - [ ] Enhance better `main.go`  to support proper exit and centralized error processing
 - [ ] Switch to use Input events directly without having to store in session ⚠️ **BLOCKED: ADK limitation - stateDelta not implemented in REST API**
 - [ ] Using experimentations folder:
-    - [ ] Experiment with overrding the `Run` method in agents
+    - [x] Experiment with overrding the `Run` method in agents
     - [ ] Experiment with Console mode to send events
 - [ ] Use the `models` package in place of inline structs in test-events.go.
 - [ ] Explore Artifacts
-- [ ] Explore Persistent Storage
+- [ ] Explore Persistent Storage Service Override
+- [ ] Explore Session Service Override
 - [ ] Explore Agent Starter Pack
 
 ## Performance Monitoring
