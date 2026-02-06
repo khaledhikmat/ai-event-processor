@@ -87,7 +87,18 @@ func (s *Server) run(ctx context.Context) error {
 		return fmt.Errorf("creating root agent error: %w", err)
 	}
 
-	loader := agent.NewSingleLoader(rootAgent)
+	// Create the test agent
+	testAgent, err := agents.NewTestAgent(ctx, s.config, toolMonitor, avilableTools)
+	if err != nil {
+		return fmt.Errorf("creating test agent error: %w", err)
+	}
+
+	// Load multiple agents into the launcher using a MultiLoader
+	// Different agents are addressable by name (e.g., "root_agent", "test_agent")
+	loader, err := agent.NewMultiLoader(rootAgent, testAgent)
+	if err != nil {
+		return fmt.Errorf("creating loader error: %w", err)
+	}
 
 	config := &launcher.Config{
 		AgentLoader:    loader,

@@ -10,11 +10,15 @@
 - [ ] Using experimentations folder:
     - [x] Experiment with overrding the `Run` method in agents
     - [ ] Experiment with Console mode to send events
-- [ ] Use the `models` package in place of inline structs in test-events.go.
-- [ ] Explore Artifacts
-- [ ] Explore Persistent Storage Service Override
-- [ ] Explore Session Service Override
+    - [x] Experiment with loop agents
+    - [ ] Experiment with generating and consuming artifacts
+- [x] Use the `models` package in place of inline structs in test-events.go.
+- [x] Explore Artifacts
+- [x] Explore Memory Service Override
+- [x] Explore Session Service Override
+- [x] Explore Artifact Service Override
 - [ ] Explore Agent Starter Pack
+- [ ] Deploy to gcloud
 
 ## Performance Monitoring
 
@@ -63,17 +67,12 @@ Agent execution: min=7.8s, max=12.3s, avg=9.5s
 ## Blockers
 
 ### stateDelta REST API Limitation
-**Task Blocked**: "Switch to use Input events directly without having to store in session"
-
-**Issue**: The `stateDelta` field in `/api/run` endpoint is defined but never processed by ADK's runtime controller.
-
-**Current Workaround**: Create session with initial state, then run agent (see `scripts/test-events.go:313-326`)
-
-**Performance Concern**: Continuous session delete/create operations may impact throughput at moderate event processing speeds. Basic timing metrics added to measure actual impact.
-
-**Reference**: `ADK-GO-DEEP-DIVE.md` lines 5232-5309
-
-**Resolution**: Wait for Google ADK update or implement custom REST endpoint
+- **Task Blocked**: "Switch to use Input events directly without having to store in session"
+- **Issue**: The `stateDelta` field in `/api/run` endpoint is defined but never processed by ADK's runtime controller.
+- **Current Workaround**: Create session with initial state, then run agent (see `scripts/test-events.go:313-326`)
+- **Performance Concern**: Continuous session delete/create operations may impact throughput at moderate event processing speeds. Basic timing metrics added to measure actual impact.
+- **Reference**: `ADK-GO-DEEP-DIVE.md` lines 5232-5309
+- **Resolution**: Wait for Google ADK update or implement custom REST endpoint
 
 
 

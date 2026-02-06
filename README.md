@@ -140,10 +140,12 @@ The server listens on port `8081` (default).
 
 ## Interactive Testing
 
+### Events Testing
+
 Start the test script to send multiple events to the AI layer over its API Endpoint and see the response:
 
 ```bash
-cd scripts
+cd scripts/events
 go run test-events.go
 ```
 
@@ -156,7 +158,7 @@ go run test-events.go
 
 This is due to a **known ADK limitation**: The `stateDelta` field in the `/api/run` REST API endpoint is defined but not actually processed by the runtime controller (as of the current ADK version).
 
-**Current Workaround** (see `scripts/test-events.go`):
+**Current Workaround** (see `scripts/events/test-events.go`):
 ```go
 // Create session with event data in initial state
 sessionPayload := map[string]interface{}{
@@ -173,6 +175,15 @@ sessionPayload := map[string]interface{}{
 **Future Improvement**: Once ADK implements `stateDelta` processing, we can simplify to a single API call with the event payload included directly in the request.
 
 **Reference**: See `ADK-GO-DEEP-DIVE.md` lines 5232-5309 for detailed documentation of this limitation.
+
+### Custom Testing
+
+Start the test script to send text to the agent and observe the generated events:
+
+```bash
+cd scripts/custom
+go run test-custom.go
+```
 
 ## Unit Testing
 

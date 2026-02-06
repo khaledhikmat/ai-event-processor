@@ -19,6 +19,7 @@ A comprehensive reference covering the architecture and internals of ADK-Go.
 - [Reading JSON State in Agent Instructions](#reading-json-state-in-agent-instructions)
 - [Authentication and the REST API Layer](#authentication-and-the-rest-api-layer)
 - [Sending JSON Input to Workflow Agents via REST API](#sending-json-input-to-workflow-agents-via-rest-api)
+- [Artifact Management](#artifact-management)
 - [Memory Management](#memory-management)
 - [Loading Workflow Agents](#loading-workflow-agents)
 - [Telemetry and Observability](#telemetry-and-observability)
@@ -5742,6 +5743,770 @@ If `jq` fails, your JSON is malformed and won't parse correctly in agent instruc
 6. **Session state is shared** across all agents in a workflow, enabling data flow from parallel analyzers to the final synthesizer
 
 This pattern works for any structured input: customer support tickets, IoT sensor data, financial transactions, medical records, or any domain where multiple specialized agents analyze different aspects of the same event before producing a unified response.
+
+---
+
+## Artifact Management
+
+### What Are Artifacts?
+
+**Artifacts** are **versioned files** stored per session that agents and tools can save, load, list, and delete. Think of them as a **file storage system** scoped to a specific session, similar to how state stores key-value data.
+
+**Location:** `artifact/service.go:15-45`
+
+**Key Concept:** An artifact is identified by:
+- **AppName** - Application identifier
+- **UserID** - User identifier
+- **SessionID** - Session identifier
+- **FileName** - The file name (no path separators allowed)
+- **Version** - Each save creates a new version (automatically incremented)
+
+### The Artifact Service Interface
+
+```go
+type Service interface {
+    // Save saves an artifact and returns a version ID
+    Save(ctx context.Context, req *SaveRequest) (*SaveResponse, error)
+
+    // Load loads an artifact (latest version or specific version)
+    Load(ctx context.Context, req *LoadRequest) (*LoadResponse, error)
+
+    // Delete deletes an artifact
+    Delete(ctx context.Context, req *DeleteRequest) error
+
+    // List lists all artifact filenames within a session
+    List(ctx context.Context, req *ListRequest) (*ListResponse, error)
+
+    // Versions lists all versions of an artifact
+    Versions(ctx context.Context, req *VersionsRequest) (*VersionsResponse, error)
+}
+```
+
+**SaveRequest** (`artifact/service.go:53-64`):
+```go
+type SaveRequest struct {
+    AppName, UserID, SessionID, FileName string
+    Part *genai.Part  // The artifact to store
+    Version int64     // Optional: specific version to save as
+}
+```
+
+**LoadRequest** (`artifact/service.go:124-130`):
+```go
+type LoadRequest struct {
+    AppName, UserID, SessionID, FileName string
+    Version int64  // Optional: load specific version (0 = latest)
+}
+```
+
+### What Can Be Stored as Artifacts?
+
+Artifacts use `genai.Part`, which can store:
+
+**1. Text content:**
+```go
+genai.NewPartFromText("This is text content")
+```
+
+**2. Binary data (images, PDFs, etc.):**
+```go
+genai.NewPartFromBytes(imageBytes, "image/png")
+genai.NewPartFromBytes(pdfBytes, "application/pdf")
+```
+
+**3. Files from disk:**
+```go
+genai.NewPartFromFile("path/to/file.txt")
+```
+
+### How Agents Access Artifacts
+
+Agents and tools access artifacts via `ctx.Artifacts()` which provides a session-aware wrapper:
+
+**Location:** `agent/agent.go:105-112`
+
+```go
+type Artifacts interface {
+    Save(ctx context.Context, name string, data *genai.Part) (*artifact.SaveResponse, error)
+    List(context.Context) (*artifact.ListResponse, error)
+    Load(ctx context.Context, name string) (*artifact.LoadResponse, error)
+    LoadVersion(ctx context.Context, name string, version int) (*artifact.LoadResponse, error)
+}
+```
+
+**Key difference from the service interface:**
+- Agents use simplified methods (just filename, no AppName/UserID/SessionID)
+- The context automatically provides session scope
+- Makes artifact access convenient from within agents and tools
+
+### Artifact Versioning
+
+Every time you save an artifact, it creates a **new version**:
+
+```go
+// First save - version 1
+resp1, _ := ctx.Artifacts().Save(ctx, "report.txt", genai.NewPartFromText("Draft 1"))
+// resp1.Version = 1
+
+// Second save - version 2
+resp2, _ := ctx.Artifacts().Save(ctx, "report.txt", genai.NewPartFromText("Draft 2"))
+// resp2.Version = 2
+
+// Third save - version 3
+resp3, _ := ctx.Artifacts().Save(ctx, "report.txt", genai.NewPartFromText("Final"))
+// resp3.Version = 3
+
+// Load latest version (version 3)
+latest, _ := ctx.Artifacts().Load(ctx, "report.txt")
+fmt.Println(latest.Part.Text)  // "Final"
+
+// Load specific version (version 1)
+original, _ := ctx.Artifacts().LoadVersion(ctx, "report.txt", 1)
+fmt.Println(original.Part.Text)  // "Draft 1"
+
+// List all versions (using service directly)
+versions, _ := artifactService.Versions(ctx, &artifact.VersionsRequest{
+    AppName:   "my_app",
+    UserID:    "user123",
+    SessionID: "sess456",
+    FileName:  "report.txt",
+})
+// versions.Versions = [1, 2, 3]
+```
+
+### ArtifactDelta: Tracking Artifact Changes in Events
+
+Similar to StateDelta, there's **ArtifactDelta** that tracks which artifacts were modified during an event.
+
+**Location:** `internal/context/callback_context.go:28-46`
+
+```go
+type internalArtifacts struct {
+    agent.Artifacts
+    eventActions *session.EventActions
+}
+
+func (ia *internalArtifacts) Save(ctx context.Context, name string, data *genai.Part) (*artifact.SaveResponse, error) {
+    resp, err := ia.Artifacts.Save(ctx, name, data)
+    if err != nil {
+        return resp, err
+    }
+
+    // Automatically track artifact saves in ArtifactDelta
+    if ia.eventActions.ArtifactDelta == nil {
+        ia.eventActions.ArtifactDelta = make(map[string]int64)
+    }
+    ia.eventActions.ArtifactDelta[name] = resp.Version
+
+    return resp, nil
+}
+```
+
+**What this means:**
+- When a tool or agent saves an artifact, it's automatically recorded in `event.Actions.ArtifactDelta`
+- ArtifactDelta is a map: `{"filename": version}`
+- This allows tracking which artifacts were modified and what version was created
+- Similar to how StateDelta tracks state changes, ArtifactDelta tracks file changes
+
+**Example event with ArtifactDelta:**
+```json
+{
+  "id": "evt_123",
+  "author": "image_generator",
+  "content": {
+    "parts": [{"text": "Image generated successfully"}]
+  },
+  "actions": {
+    "stateDelta": {
+      "image_status": "completed"
+    },
+    "artifactDelta": {
+      "sunset.png": 1,
+      "mountains.png": 2
+    }
+  }
+}
+```
+
+### Built-in Implementations
+
+**Location:** `artifact/inmemory.go`, `artifact/gcsartifact/service.go`
+
+| Implementation | File | Backend | Use Case |
+|---|---|---|---|
+| **In-Memory** | `artifact/inmemory.go` | Thread-safe maps | Development, testing |
+| **Google Cloud Storage** | `artifact/gcsartifact/service.go` | GCS buckets | Production, scalable storage |
+
+**In-Memory Service:**
+```go
+import "google.golang.org/adk/artifact"
+
+artifactSvc := artifact.InMemoryService()
+```
+
+**GCS Service:**
+```go
+import "google.golang.org/adk/artifact/gcsartifact"
+
+gcsClient, _ := gcsartifact.NewClient(ctx, "my-bucket-name")
+artifactSvc := gcsartifact.NewService(gcsClient)
+```
+
+### When to Use Artifacts
+
+**Use artifacts for:**
+
+1. **Generated content that's too large for state**
+   - Images, videos, audio files
+   - Large documents, reports, PDFs
+   - Code files, datasets
+   - Any file over a few KB
+
+2. **Content that needs to be versioned**
+   - Iterative document editing
+   - Code generation with revisions
+   - Image variations
+   - Progressive refinement workflows
+
+3. **Content that the LLM needs to reference**
+   - Use with `loadartifactstool` to let the LLM load and analyze files
+   - Images for vision models
+   - Documents for analysis
+   - Code for review
+
+4. **Binary or structured data**
+   - Images (PNG, JPG, GIF, etc.)
+   - PDFs
+   - Spreadsheets
+   - Audio/video files
+   - Any non-text file format
+
+**Don't use artifacts for:**
+- Small text values (use state instead - more efficient)
+- Simple key-value data (use state instead)
+- Data that doesn't need versioning (use state)
+- Temporary working data (use `temp:` prefix in state instead)
+- Cross-session data (artifacts are session-scoped only)
+
+### Real-World Examples
+
+#### Example 1: Image Generation Tool
+
+**From:** `examples/web/agents/image_generator.go:33-67`
+
+```go
+func generateImage(ctx tool.Context, input generateImageInput) (generateImageResult, error) {
+    // Call Vertex AI to generate image
+    client, err := genai.NewClient(ctx, &genai.ClientConfig{
+        Project:  os.Getenv("GOOGLE_CLOUD_PROJECT"),
+        Location: os.Getenv("GOOGLE_CLOUD_LOCATION"),
+        Backend:  genai.BackendVertexAI,
+    })
+    if err != nil {
+        return generateImageResult{Status: "fail"}, nil
+    }
+
+    response, err := client.Models.GenerateImages(
+        ctx,
+        "imagen-3.0-generate-002",
+        input.Prompt,
+        &genai.GenerateImagesConfig{NumberOfImages: 1})
+    if err != nil {
+        return generateImageResult{Status: "fail"}, nil
+    }
+
+    // Save generated image as artifact
+    _, err = ctx.Artifacts().Save(
+        ctx,
+        input.Filename,
+        genai.NewPartFromBytes(response.GeneratedImages[0].Image.ImageBytes, "image/png"))
+    if err != nil {
+        return generateImageResult{Status: "fail"}, nil
+    }
+
+    return generateImageResult{
+        Status:   "success",
+        Filename: input.Filename,
+    }, nil
+}
+
+type generateImageInput struct {
+    Prompt   string `json:"prompt"`
+    Filename string `json:"filename"`
+}
+
+type generateImageResult struct {
+    Filename string `json:"filename"`
+    Status   string `json:"status"`
+}
+
+// Agent configuration
+imageGeneratorAgent, _ := llmagent.New(llmagent.Config{
+    Name:        "image_generator",
+    Model:       model,
+    Description: "Agent to generate pictures, answers questions about it and saves it locally",
+    Instruction: "You are an agent whose job is to generate or edit an image based on the user's prompt.",
+    Tools: []tool.Tool{
+        generateImageTool,
+        loadartifactstool.New(),  // Allows LLM to load saved images
+    },
+})
+```
+
+**What happens:**
+1. User asks: "Generate a sunset over mountains and save it as sunset.png"
+2. Agent calls `generate_image` tool with prompt and filename
+3. Tool generates image via Vertex AI Imagen model
+4. Tool saves image as artifact: `ctx.Artifacts().Save(ctx, "sunset.png", imageBytes)`
+5. ArtifactDelta tracks this: `{"sunset.png": 1}`
+6. User can later ask: "Show me the sunset image"
+7. Agent uses `load_artifacts` tool to retrieve it
+8. LLM can now "see" the image and answer questions about it
+
+#### Example 2: Document Editor Agent
+
+```go
+type DocumentEditorTool struct{}
+
+type EditDocumentArgs struct {
+    Filename string   `json:"filename"`
+    Edits    []string `json:"edits"`
+}
+
+type EditResult struct {
+    Success bool   `json:"success"`
+    Version int64  `json:"version"`
+    Message string `json:"message"`
+}
+
+func (t *DocumentEditorTool) Execute(ctx tool.Context, args EditDocumentArgs) (EditResult, error) {
+    // Load existing document (if it exists)
+    var currentContent string
+    resp, err := ctx.Artifacts().Load(ctx, args.Filename)
+    if err == nil {
+        currentContent = resp.Part.Text
+    } else {
+        // New document
+        currentContent = ""
+    }
+
+    // Apply edits
+    updatedContent := applyEdits(currentContent, args.Edits)
+
+    // Save new version
+    saveResp, err := ctx.Artifacts().Save(
+        ctx,
+        args.Filename,
+        genai.NewPartFromText(updatedContent))
+    if err != nil {
+        return EditResult{Success: false}, err
+    }
+
+    return EditResult{
+        Success: true,
+        Version: saveResp.Version,
+        Message: fmt.Sprintf("Document saved as version %d", saveResp.Version),
+    }, nil
+}
+
+// Usage flow:
+// User: "Create a document called report.txt with an introduction"
+// → Tool saves: version 1 (introduction)
+
+// User: "Add a methodology section"
+// → Tool loads version 1, adds methodology, saves: version 2
+
+// User: "Add a conclusion"
+// → Tool loads version 2, adds conclusion, saves: version 3
+
+// User: "Show me the original version"
+// → Agent: LoadVersion(ctx, "report.txt", 1)
+
+// User: "What versions exist?"
+// → Agent: List versions [1, 2, 3]
+```
+
+#### Example 3: Code Generator with Versioning
+
+```go
+type CodeGeneratorTool struct{}
+
+type CodeGenArgs struct {
+    Specification string `json:"specification"`
+    Language      string `json:"language"`
+    Filename      string `json:"filename"`
+}
+
+type CodeGenResult struct {
+    Filename string `json:"filename"`
+    Version  int64  `json:"version"`
+    Language string `json:"language"`
+}
+
+func (t *CodeGeneratorTool) Execute(ctx tool.Context, args CodeGenArgs) (CodeGenResult, error) {
+    // Generate code using LLM (pseudo-code)
+    code := generateCodeFromSpec(args.Specification, args.Language)
+
+    // Save as artifact
+    resp, err := ctx.Artifacts().Save(
+        ctx,
+        args.Filename,
+        genai.NewPartFromText(code))
+    if err != nil {
+        return CodeGenResult{}, err
+    }
+
+    // Also save metadata in state (for quick access)
+    ctx.State().Set("code_version", resp.Version)
+    ctx.State().Set("code_language", args.Language)
+    ctx.State().Set("code_filename", args.Filename)
+    ctx.State().Set("last_generated", time.Now().Format(time.RFC3339))
+
+    return CodeGenResult{
+        Filename: args.Filename,
+        Version:  resp.Version,
+        Language: args.Language,
+    }, nil
+}
+
+// Usage flow:
+// User: "Generate a Python function to calculate fibonacci numbers"
+// → Version 1: Basic implementation
+
+// User: "Add memoization for better performance"
+// → Version 2: Optimized with memoization
+
+// User: "Add type hints and docstrings"
+// → Version 3: Fully documented
+
+// User: "Show me the original version"
+// → Load version 1
+
+// User: "What's the difference between version 1 and 3?"
+// → Load both versions and compare
+```
+
+#### Example 4: Using loadartifactstool
+
+**The `loadartifactstool` is a special built-in tool that:**
+1. Lists all artifacts in the session
+2. Informs the LLM about available artifacts
+3. Loads artifacts when the LLM requests them
+4. Adds artifact content to the LLM context
+
+**Location:** `tool/loadartifactstool/load_artifacts_tool.go`
+
+**How it works:**
+
+```go
+import "google.golang.org/adk/tool/loadartifactstool"
+
+agent, _ := llmagent.New(llmagent.Config{
+    Name:  "document_analyzer",
+    Tools: []tool.Tool{
+        loadartifactstool.New(),  // Add this tool
+    },
+})
+
+// User saves some documents (via other tools or API)
+// Artifacts in session:
+// - "contract.pdf"
+// - "report.txt"
+// - "image.png"
+
+// User asks: "What does the contract say about payment terms?"
+
+// loadartifactstool automatically:
+// 1. Adds instruction: "You have artifacts: ["contract.pdf", "report.txt", "image.png"]"
+// 2. LLM realizes it needs to load "contract.pdf"
+// 3. LLM calls load_artifacts function with: {"artifact_names": ["contract.pdf"]}
+// 4. Tool loads the artifact and adds it to the LLM context
+// 5. LLM can now read and analyze the PDF content
+// 6. LLM responds with information about payment terms
+```
+
+**Auto-generated instructions** (`tool/loadartifactstool/load_artifacts_tool.go:142-151`):
+
+```go
+instructions := fmt.Sprintf(
+    "You have a list of artifacts:\n  %s\n\n"+
+    "When the user asks questions about any of the artifacts, you should "+
+    "call the `load_artifacts` function to load the artifact. "+
+    "Do not generate any text other than the function call. "+
+    "Whenever you are asked about artifacts, you should first load it. "+
+    "You must always load an artifact to access its content, "+
+    "even if it has been loaded before.",
+    string(artifactNamesJSON))
+```
+
+**Processing flow** (`tool/loadartifactstool/load_artifacts_tool.go:154-206`):
+
+```go
+func (t *artifactsTool) processLoadArtifactsFunctionCall(ctx tool.Context, req *model.LLMRequest) error {
+    // Detect if last message was a load_artifacts function response
+    // If so, load the requested artifacts and add to context
+
+    for _, artifactName := range artifactNames {
+        // Load each artifact
+        resp, err := artifactsService.Load(ctx, artifactName)
+
+        // Add to LLM context
+        content := &genai.Content{
+            Parts: []*genai.Part{
+                genai.NewPartFromText("Artifact " + artifactName + " is:"),
+                resp.Part,  // The actual artifact content
+            },
+            Role: genai.RoleUser,
+        }
+        req.Contents = append(req.Contents, content)
+    }
+}
+```
+
+#### Example 5: Multi-Modal Agent with Images
+
+```go
+type VisionAnalyzerAgent struct{}
+
+func createVisionAgent() agent.Agent {
+    analyzeImageTool, _ := functiontool.New(
+        functiontool.Config{
+            Name:        "analyze_image",
+            Description: "Analyzes an image and provides detailed description",
+        },
+        func(ctx tool.Context, args struct {
+            ImageFile string `json:"image_file"`
+        }) (struct {
+            Analysis string `json:"analysis"`
+        }, error) {
+            // Load image artifact
+            resp, err := ctx.Artifacts().Load(ctx, args.ImageFile)
+            if err != nil {
+                return struct{ Analysis string }{}, err
+            }
+
+            // Use vision model to analyze
+            // (In real implementation, you'd call a vision model)
+            analysis := analyzeImageWithVision(resp.Part)
+
+            // Save analysis as text artifact for future reference
+            ctx.Artifacts().Save(
+                ctx,
+                args.ImageFile+".analysis.txt",
+                genai.NewPartFromText(analysis))
+
+            return struct{ Analysis string }{Analysis: analysis}, nil
+        })
+
+    agent, _ := llmagent.New(llmagent.Config{
+        Name:        "vision_analyzer",
+        Description: "Analyzes images and answers questions",
+        Tools: []tool.Tool{
+            analyzeImageTool,
+            loadartifactstool.New(),
+        },
+    })
+
+    return agent
+}
+
+// Usage:
+// User uploads image → saved as "photo.jpg" artifact
+// User: "What's in this photo?"
+// → Agent loads photo.jpg
+// → Analyzes it
+// → Saves analysis as photo.jpg.analysis.txt
+// → Responds with description
+
+// User: "What colors are dominant?"
+// → Agent loads photo.jpg.analysis.txt (faster than re-analyzing)
+// → Extracts color information
+```
+
+### Artifacts vs State: Comparison Table
+
+| Feature | Artifacts | State |
+|---------|-----------|-------|
+| **Data Type** | Files (text, binary, images, PDFs) | Key-value pairs (strings, numbers, objects) |
+| **Size** | Large files (KB to MB) | Small values (bytes to KB) |
+| **Versioning** | Built-in versioning (automatic) | No versioning (overwrites) |
+| **LLM Access** | Via `load_artifacts` tool | Via template variables `{key}` |
+| **Scoping** | Session-scoped only | Session, user, app, temp scopes |
+| **Use Cases** | Generated images, documents, code files | Configuration, agent outputs, preferences |
+| **Storage** | File storage (in-memory, GCS) | Key-value storage |
+| **Tracking** | ArtifactDelta (filename → version) | StateDelta (key → value) |
+| **REST API** | `/artifacts/{filename}` | Embedded in session state |
+| **History** | All versions retained | Only current value |
+| **Binary Support** | Yes (images, PDFs, etc.) | No (JSON-serializable only) |
+
+### Configuring Artifact Service
+
+**In your Runner config:**
+
+```go
+import (
+    "google.golang.org/adk/artifact"
+    "google.golang.org/adk/artifact/gcsartifact"
+    "google.golang.org/adk/runner"
+)
+
+// Using in-memory artifacts (development)
+r, _ := runner.New(&runner.Config{
+    AppName:         "my_app",
+    Agent:           myAgent,
+    SessionService:  session.InMemoryService(),
+    ArtifactService: artifact.InMemoryService(),  // ← In-memory artifacts
+})
+
+// Using Google Cloud Storage (production)
+gcsClient, _ := gcsartifact.NewClient(ctx, "my-artifact-bucket")
+r, _ := runner.New(&runner.Config{
+    AppName:         "my_app",
+    Agent:           myAgent,
+    SessionService:  session.DatabaseService(...),
+    ArtifactService: gcsartifact.NewService(gcsClient),  // ← GCS artifacts
+})
+```
+
+**In your Launcher config:**
+
+```go
+import (
+    "google.golang.org/adk/cmd/launcher"
+    "google.golang.org/adk/artifact"
+)
+
+config := &launcher.Config{
+    AgentLoader:     agent.NewSingleLoader(myAgent),
+    SessionService:  session.InMemoryService(),
+    ArtifactService: artifact.InMemoryService(),  // ← Artifact service
+}
+```
+
+### REST API for Artifacts
+
+**Location:** `server/adkrest/internal/routers/artifacts.go`
+
+The REST API provides endpoints for artifact management:
+
+```
+POST   /api/apps/{app}/users/{user}/sessions/{session}/artifacts/{filename}
+       Save an artifact (creates new version)
+
+GET    /api/apps/{app}/users/{user}/sessions/{session}/artifacts/{filename}
+       Load latest version of an artifact
+
+GET    /api/apps/{app}/users/{user}/sessions/{session}/artifacts/{filename}?version={n}
+       Load specific version of an artifact
+
+DELETE /api/apps/{app}/users/{user}/sessions/{session}/artifacts/{filename}
+       Delete an artifact (all versions)
+
+GET    /api/apps/{app}/users/{user}/sessions/{session}/artifacts
+       List all artifacts in the session
+
+GET    /api/apps/{app}/users/{user}/sessions/{session}/artifacts/{filename}/versions
+       List all versions of an artifact
+```
+
+**Example REST usage:**
+
+```bash
+# Save an image artifact
+curl -X POST \
+  http://localhost:8080/api/apps/my_app/users/user123/sessions/sess456/artifacts/sunset.png \
+  -H "Content-Type: image/png" \
+  --data-binary @sunset.png
+
+# Response: {"version": 1}
+
+# Load the artifact (latest version)
+curl http://localhost:8080/api/apps/my_app/users/user123/sessions/sess456/artifacts/sunset.png \
+  > downloaded_sunset.png
+
+# Load specific version
+curl "http://localhost:8080/api/apps/my_app/users/user123/sessions/sess456/artifacts/sunset.png?version=1" \
+  > original_sunset.png
+
+# List all artifacts
+curl http://localhost:8080/api/apps/my_app/users/user123/sessions/sess456/artifacts
+
+# Response: {"fileNames": ["sunset.png", "mountains.png", "report.txt"]}
+
+# List versions of an artifact
+curl http://localhost:8080/api/apps/my_app/users/user123/sessions/sess456/artifacts/sunset.png/versions
+
+# Response: {"versions": [1, 2, 3]}
+
+# Delete an artifact
+curl -X DELETE \
+  http://localhost:8080/api/apps/my_app/users/user123/sessions/sess456/artifacts/sunset.png
+```
+
+### Best Practices
+
+1. **Use descriptive filenames**: Include file extensions (`.png`, `.pdf`, `.txt`) to indicate content type
+
+2. **Leverage versioning**: Don't delete and recreate - save new versions to maintain history
+
+3. **Combine with state**: Store artifact metadata in state for quick access
+   ```go
+   ctx.Artifacts().Save(ctx, "report.pdf", pdfData)
+   ctx.State().Set("report_generated_at", time.Now())
+   ctx.State().Set("report_version", version)
+   ```
+
+4. **Use loadartifactstool for LLM access**: Don't manually load artifacts in instructions - let the tool handle it
+
+5. **Clean up old sessions**: Artifacts are session-scoped, so they're deleted when sessions are deleted
+
+6. **Monitor storage size**: In production, use GCS with lifecycle policies to manage costs
+
+7. **Validate filenames**: No path separators (`/` or `\`) allowed - use flat namespace
+
+8. **Handle errors gracefully**: Check if artifacts exist before loading
+   ```go
+   resp, err := ctx.Artifacts().Load(ctx, filename)
+   if err != nil {
+       // Artifact doesn't exist - handle appropriately
+   }
+   ```
+
+### Common Patterns
+
+**Pattern 1: Iterative Refinement**
+```go
+// Load current version
+current, _ := ctx.Artifacts().Load(ctx, "design.txt")
+
+// Refine content
+refined := refine(current.Part.Text, userFeedback)
+
+// Save as new version
+ctx.Artifacts().Save(ctx, "design.txt", genai.NewPartFromText(refined))
+```
+
+**Pattern 2: Multi-File Workflows**
+```go
+// Generate multiple related artifacts
+ctx.Artifacts().Save(ctx, "code.py", codeContent)
+ctx.Artifacts().Save(ctx, "tests.py", testsContent)
+ctx.Artifacts().Save(ctx, "README.md", docsContent)
+
+// Track in state
+ctx.State().Set("project_files", []string{"code.py", "tests.py", "README.md"})
+```
+
+**Pattern 3: Version Comparison**
+```go
+// Load two versions
+v1, _ := ctx.Artifacts().LoadVersion(ctx, "document.txt", 1)
+v3, _ := ctx.Artifacts().LoadVersion(ctx, "document.txt", 3)
+
+// Compare and report differences
+diff := compareVersions(v1.Part.Text, v3.Part.Text)
+ctx.State().Set("version_diff", diff)
+```
 
 ---
 

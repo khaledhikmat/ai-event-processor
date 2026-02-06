@@ -3,7 +3,11 @@ package agents
 import (
 	"context"
 	_ "embed"
+	"fmt"
+	"iter"
 	"log/slog"
+	rand "math/rand/v2"
+	"time"
 
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
@@ -11,6 +15,7 @@ import (
 	"google.golang.org/adk/agent/workflowagents/sequentialagent"
 	"google.golang.org/adk/model"
 	"google.golang.org/adk/model/gemini"
+	"google.golang.org/adk/session"
 	"google.golang.org/adk/tool"
 	"google.golang.org/genai"
 
@@ -40,6 +45,63 @@ type agentConfig struct {
 	tools       []tool.Tool
 	temperature float32
 }
+
+//=====
+
+const testAgentIterations = 10
+
+type testAgent struct {
+	id int
+}
+
+// Run implements the agent's behavior by streaming greeting messages with random delays.
+// No AI calls are made in this implementation.
+func (a testAgent) Run(_ agent.InvocationContext) iter.Seq2[*session.Event, error] {
+	return func(yield func(*session.Event, error) bool) {
+		// Generate events with random delays
+		for i := range testAgentIterations {
+			partial := true
+			if i == (testAgentIterations - 1) {
+				partial = false
+			}
+
+			if !yield(&session.Event{
+				ID:        fmt.Sprintf("event-%d", i+1),
+				Timestamp: time.Now(),
+				LLMResponse: model.LLMResponse{
+					Content: &genai.Content{
+						Parts: []*genai.Part{
+							{
+								Text: fmt.Sprintf("Hello from TestAgent - iteration: # %d: %v!", i, a.id),
+							},
+						},
+					},
+					Partial: partial,
+				},
+			}, nil) {
+				return
+			}
+
+			r := 1 + rand.IntN(5)
+			time.Sleep(time.Duration(r) * time.Second)
+		}
+	}
+}
+
+func NewTestAgent(_ context.Context, _ *config.Config, _ *tools.Monitor, _ []tool.Tool) (agent.Agent, error) {
+	testAgent, err := agent.New(agent.Config{
+		Name:        "test_agent",
+		Description: "A custom agent that responds with a greeting.",
+		Run:         testAgent{id: 100}.Run, // Override to fully control the agent's behavior.
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return testAgent, nil
+}
+
+//======
 
 func NewRootAgent(ctx context.Context, cfgsvc *config.Config, monitor *tools.Monitor, availableTools []tool.Tool) (agent.Agent, error) {
 	// Create model config - if GOOGLE_GENAI_USE_VERTEXAI=1, use Vertex AI, otherwise use API key
