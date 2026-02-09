@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Analysis with ADK</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .preview {
+            max-width: 100%;
+            max-height: 400px;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            margin: 10px 0;
+        }
+
+        .response {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Image Upload and Analysis</h1>
+
+        <h2>1. Upload Image</h2>
+        <input type="file" id="imageInput" accept="image/*">
+        <img id="preview" class="preview" style="display:none;">
+        <br><br>
+
+        <label>Session ID:</label>
+        <input type="text" id="sessionId" value="session123" style="width: 200px;">
+        <br><br>
+
+        <button onclick="uploadImage()">Upload Image</button>
+
+        <h2>2. Analyze Image</h2>
+        <label>Question about the image:</label>
+        <textarea id="question" placeholder="What objects are in this image?">Describe this image in detail.</textarea>
+        <br>
+        <button onclick="analyzeImage()">Analyze</button>
+
+        <div id="response" class="response" style="display:none;"></div>
+    </div>
+
+    <script>
+        let currentFilename = '';
+        const APP_NAME = 'image_analyzer';
+        const USER_ID = 'user123';
+
+        // Preview image when selected
+        document.getElementById('imageInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = document.getElementById('preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function uploadImage() {
+            const fileInput = document.getElementById('imageInput');
+            const sessionId = document.getElementById('sessionId').value;
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            currentFilename = file.name;
+
+            // Upload via custom endpoint
+            const url = `/upload?app=${APP_NAME}&user=${USER_ID}&session=${sessionId}&filename=${encodeURIComponent(currentFilename)}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': file.type
+                    },
+                    body: file
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`Image uploaded successfully!\nFilename: ${result.filename}\nVersion: ${result.version}`);
+                } else {
+                    alert(`Upload failed: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                alert(`Upload failed: ${error.message}`);
+            }
+        }
+
+        async function analyzeImage() {
+            const sessionId = document.getElementById('sessionId').value;
+            const question = document.getElementById('question').value;
+
+            if (!currentFilename) {
+                alert('Please upload an image first');
+                return;
+            }
+
+            request = {
+                appName: `${APP_NAME}`,
+                userId: `${USER_ID}`,
+                sessionId: `${sessionId}`,
+                newMessage: {
+                    role: "user",
+                    parts: [{ text: question }]
+                }
+            }
+
+            // Send message to agent via ADK REST API
+            // ***** 
+            // Please note that this endpoint assumes that a session
+            // has already been created for the given sessionId and userId.
+            // This requires that you run client.go before trying to analyze the image, as client.go is responsible for creating the session.
+            const url = `/api/run`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                const data = await response.json();
+                console.log('Raw response from server:', data, data.length);
+
+                // Extract assistant response from events
+                let analysisText = '';
+                if (data && data.length > 0) {
+                    for (const event of data) {
+                        if (event.author === 'image_analyzer' && event.content && event.content.parts) {
+                            for (const part of event.content.parts) {
+                                if (part.text) {
+                                    analysisText += part.text;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const responseDiv = document.getElementById('response');
+                responseDiv.textContent = analysisText || 'No response received';
+                responseDiv.style.display = 'block';
+            } catch (error) {
+                alert(`Analysis failed: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+
+</html>

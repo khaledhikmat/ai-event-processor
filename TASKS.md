@@ -7,11 +7,11 @@
 - [ ] Add OpenTelemetry globally so that ADK can tap on it
 - [ ] Enhance better `main.go`  to support proper exit and centralized error processing
 - [ ] Switch to use Input events directly without having to store in session ⚠️ **BLOCKED: ADK limitation - stateDelta not implemented in REST API**
-- [ ] Using experimentations folder:
+- [x] Using experimentations folder:
     - [x] Experiment with overrding the `Run` method in agents
-    - [ ] Experiment with Console mode to send events
+    - [x] Experiment with Console mode to send events
     - [x] Experiment with loop agents
-    - [ ] Experiment with generating and consuming artifacts
+    - [x] Experiment with generating and consuming artifacts
 - [x] Use the `models` package in place of inline structs in test-events.go.
 - [x] Explore Artifacts
 - [x] Explore Memory Service Override
