@@ -19,4 +19,4 @@ go run main.go
 http://localhost:8080
 ```
 
-**Please note** that this defaults to `session123`. This session must be created!! Otherwise, the error message you get indicates that a session does noy exist. You can tun the `client.go` first to create the session.
+**Please note** that the session defaults to `session123`. This session must be created!! Otherwise, you get an error message indicating that a session does not exist. Please run the `client.go` first to create the `session123` session.
